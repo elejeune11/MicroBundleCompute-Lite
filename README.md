@@ -1,13 +1,10 @@
 # Microbundle Compute Repository Lite
 
-<!---
-We will configure these once we make the repository public:
 [![python](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/)
 ![os](https://img.shields.io/badge/os-ubuntu%20|%20macos%20|%20windows-blue.svg)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/sandialabs/sibl#license)
 
 [![tests](https://github.com/elejeune11/microbundlecompute-lite/workflows/tests/badge.svg)](https://github.com/elejeune11/microbundlecompute-lite/actions) [![codecov](https://codecov.io/gh/elejeune11/microbundlecompute-lite/branch/main/graph/badge.svg?token=EVCCPWCUE7)](https://codecov.io/gh/elejeune11/microbundlecompute-lite)
--->
 
 ## Table of Contents
 * [Project Summary](#summary)
@@ -150,7 +147,7 @@ The outputs of running this code will be stored in the ``results`` folder. The f
 1 25 49
 2 49 72
 ```
-and mean that beat 0 starts at frame 3 and ends at frame 25, beat 1 starts at frame 25 and ends at frame 49, and beat 2 starts at frame 49 and ends at frame 72. Note that if full beats cannot be segmented from the timeseries data there may be issues with running the code.
+and mean that beat 0 starts at frame 3 and ends at frame 25, beat 1 starts at frame 25 and ends at frame 49, and beat 2 starts at frame 49 and ends at frame 72. Note that if full beats cannot be segmented from the timeseries data there may be issues with running the code. Often, the visually apparent first and last beat will be excluded from this segmentation because we cannot identify clear start and end points.
 
 Then, there will be one row-position file and one col-position file for each beat. The ``row`` and ``col`` positions match the original image provided. Specifically:
 * ``beat%i_row_pos.txt`` will contain the row positions of each marker for the beat specified by ``%i``
@@ -164,6 +161,8 @@ The outputs of running the visualization code will be stored in the ``visualizat
 <p align = "center">
 <img alt="tracking visualization" src="tutorials/figs/abs_disp_long.gif" width="75%" />
 </p>
+
+In this particular example, note that tracking points are not automatically identified in blurry regions of the tissue. If desired, we can: (1) lower quality parameters to pick up more tracking points in these areas, (2) create functions for interpolation, or (3) leave as is to avoid added uncertainty and motivate higher resolution microscopy images.
 
 ## Validation <a name="validation"></a>
 
