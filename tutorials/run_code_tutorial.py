@@ -15,4 +15,4 @@ ia.run_tracking(input_folder)
 # run the visualization
 col_max = 3
 col_map = plt.cm.viridis
-png_path_list, gif_path, mp4_path = ia.run_visualization(input_folder, col_max, col_map)
+png_path_list, gif_path = ia.run_visualization(input_folder, col_max, col_map)

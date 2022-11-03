@@ -286,7 +286,7 @@ def test_load_tracking_results():
     assert error.typename == "FileNotFoundError"
 
 
-def test_create_pngs_gif_mp4():
+def test_create_pngs_gif():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
     tracker_row_all, tracker_col_all, info = ia.load_tracking_results(folder_path)
@@ -300,8 +300,8 @@ def test_create_pngs_gif_mp4():
         assert pa.is_file()
     gif_path = ia.create_gif(folder_path, path_list)
     assert gif_path.is_file()
-    mp4_path = ia.create_mp4(folder_path, gif_path)
-    assert mp4_path.is_file()
+    # mp4_path = ia.create_mp4(folder_path, gif_path)
+    # assert mp4_path.is_file()
 
 
 def test_run_visualization():
@@ -309,8 +309,7 @@ def test_run_visualization():
     _ = ia.run_tracking(folder_path)
     col_max = 3
     col_map = plt.cm.viridis
-    png_path_list, gif_path, mp4_path = ia.run_visualization(folder_path, col_max, col_map)
+    png_path_list, gif_path = ia.run_visualization(folder_path, col_max, col_map)
     for pa in png_path_list:
         assert pa.is_file()
     assert gif_path.is_file()
-    assert mp4_path.is_file()

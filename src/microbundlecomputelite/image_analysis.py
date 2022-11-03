@@ -2,7 +2,7 @@ import cv2
 import glob
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
-import moviepy.editor as mp
+# import moviepy.editor as mp
 import numpy as np
 import os
 from pathlib import Path
@@ -275,12 +275,12 @@ def create_gif(folder_path: Path, png_path_list: List) -> Path:
     return gif_path
 
 
-def create_mp4(folder_path: Path, gif_path: Path) -> Path:
-    """Given the gif path. Will create a mp4."""
-    clip = mp.VideoFileClip(str(gif_path))
-    mp4_path = folder_path.joinpath("visualizations").resolve().joinpath("abs_disp.mp4").resolve()
-    clip.write_videofile(str(mp4_path))
-    return mp4_path
+# def create_mp4(folder_path: Path, gif_path: Path) -> Path:
+#     """Given the gif path. Will create a mp4."""
+#     clip = mp.VideoFileClip(str(gif_path))
+#     mp4_path = folder_path.joinpath("visualizations").resolve().joinpath("abs_disp.mp4").resolve()
+#     clip.write_videofile(str(mp4_path))
+#     return mp4_path
 
 
 def run_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_map: object = plt.cm.viridis) -> List:
@@ -296,5 +296,5 @@ def run_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_ma
     # create gif
     gif_path = create_gif(folder_path, png_path_list)
     # create mp4
-    mp4_path = create_mp4(folder_path, gif_path)
-    return png_path_list, gif_path, mp4_path
+    # mp4_path = create_mp4(folder_path, gif_path)
+    return png_path_list, gif_path
