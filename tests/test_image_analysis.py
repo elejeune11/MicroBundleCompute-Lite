@@ -128,11 +128,11 @@ def test_mask_to_track_points_synthetic():
     mask = np.ones(img_uint8.shape)
     feature_params, _ = ia.get_tracking_param_dicts()
     track_points_0 = ia.mask_to_track_points(img_uint8, mask, feature_params)
-    tp_0_ix1 = np.sort(track_points_0[:, 0, 0])  # note swapped indicies here
-    tp_0_ix0 = np.sort(track_points_0[:, 0, 1])  # note swapped indicies here
+    tp_0_ix_col = np.sort(track_points_0[:, 0, 0])  # note col
+    tp_0_ix_row = np.sort(track_points_0[:, 0, 1])  # note row
     for kk in range(1, 10):
-        tp_0 = tp_0_ix0[kk - 1]
-        tp_1 = tp_0_ix1[kk - 1]
+        tp_0 = tp_0_ix_row[kk - 1]
+        tp_1 = tp_0_ix_col[kk - 1]
         val0 = int(kk * 10)
         val1 = int(kk * 5)
         assert np.isclose(tp_0, val0, atol=1)
