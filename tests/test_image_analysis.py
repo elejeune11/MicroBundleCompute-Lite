@@ -46,6 +46,15 @@ def test_read_tiff():
     assert np.allclose(known, found)
 
 
+def test_create_folder_guaranteed_conditions():
+    folder_path = example_path("real_example_super_short")
+    new_folder_name = "test_create_folder_%i" % (np.random.random() * 1000000)
+    new_folder = ia.create_folder(folder_path, new_folder_name)
+    assert new_folder.is_dir()
+    new_folder = ia.create_folder(folder_path, new_folder_name)
+    assert new_folder.is_dir()
+
+
 def test_image_folder_to_path_list():
     folder_path = movie_path("real_example_super_short")
     name_list_path = ia.image_folder_to_path_list(folder_path)

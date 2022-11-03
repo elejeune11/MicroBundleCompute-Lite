@@ -43,6 +43,14 @@ def read_all_tiff(path_list: List) -> List:
     return tiff_list
 
 
+def create_folder(folder_path: Path, new_folder_name: str) -> Path:
+    """Given a path to a directory and a folder name. Will create a directory in the given directory."""
+    new_path = folder_path.joinpath(new_folder_name).resolve()
+    if new_path.exists() is False:
+        os.mkdir(new_path)
+    return new_path
+
+
 def uint16_to_uint8(img_16: np.ndarray) -> np.ndarray:
     """Given a uint16 image. Will normalize + rescale and convert to uint8."""
     img_8 = img_as_ubyte(exposure.rescale_intensity(img_16))
@@ -164,9 +172,7 @@ def split_tracking(tracker_0: np.ndarray, tracker_1: np.ndarray, info: np.ndarra
 
 def save_tracking(folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray) -> List:
     """Given tracking results. Will save as text files."""
-    new_path = folder_path.joinpath("results").resolve()
-    if new_path.exists() is False:
-        os.mkdir(new_path)
+    new_path = create_folder(folder_path, "results")
     num_beats = info.shape[0]
     saved_paths = []
     for kk in range(0, num_beats):
@@ -232,12 +238,8 @@ def create_pngs(
     col_map: object
 ) -> List:
     """Given tracking results. Will create png version of the visualizations."""
-    vis_folder_path = folder_path.joinpath("visualizations").resolve()
-    if vis_folder_path.exists() is False:
-        os.mkdir(vis_folder_path)
-    pngs_folder_path = vis_folder_path.joinpath("pngs").resolve()
-    if pngs_folder_path.exists() is False:
-        os.mkdir(pngs_folder_path)
+    vis_folder_path = create_folder(folder_path, "visualizations")
+    pngs_folder_path = create_folder(vis_folder_path, "pngs")
     path_list = []
     num_beats = info.shape[0]
     for beat in range(0, num_beats):
