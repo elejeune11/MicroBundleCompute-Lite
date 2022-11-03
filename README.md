@@ -156,7 +156,7 @@ In these text files, the rows correspond to individual markers, while the column
 
 ### Understanding the visualization results
 
-The outputs of running the visualization code will be stored in the ``visualizations`` folder. Here, we plot absolute displacement of the identified markers. There is an optional argument in the visualization script that can be used to set the displacement bounds and the colormap. The default is absolute displacement ranging from 0-10 pixels, and the default colormap is ``cividis`` (see https://matplotlib.org/stable/tutorials/colors/colormaps.html for options). The output visualizations are stored as ``.pngs``, ``.gif`` and ``.mp4``.
+The outputs of running the visualization code will be stored in the ``visualizations`` folder. Here, we plot absolute displacement of the identified markers. There is an optional argument in the visualization script that can be used to set the displacement bounds and the colormap. The default is absolute displacement ranging from 0-10 pixels, and the default colormap is ``cividis`` (see https://matplotlib.org/stable/tutorials/colors/colormaps.html for options). The output visualizations are stored as ``.pngs`` and as a ``.gif`` -- ``.mp4`` functionality was removed due to issues with ffmpeg on some machines.
 
 <p align = "center">
 <img alt="tracking visualization" src="tutorials/figs/abs_disp_long.gif" width="75%" />
