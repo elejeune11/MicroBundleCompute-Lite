@@ -33,7 +33,7 @@ The goal of this work is to create a multi-purpose tools for analyzing heterogen
 
 ### Get a copy of the microbundle compute repository on your local machine
 
-The best way to do this is to create a GitHub account and ``clone`` the repository. However, you can also download the repository by clicking the green ``Code`` button and selecting ``Download ZIP``. Downloaded and unzip the ``microbundlecompute-lite-main`` folder and place it in a convenient location on your computer.
+The best way to do this is to create a GitHub account and ``clone`` the repository. However, you can also download the repository by clicking the green ``Code`` button and selecting ``Download ZIP``. Download and unzip the ``microbundlecompute-lite-main`` folder and place it in a convenient location on your computer.
 
 
 ### Create and activate a conda virtual environment
