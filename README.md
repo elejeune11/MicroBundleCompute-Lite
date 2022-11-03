@@ -29,7 +29,7 @@ The MicroBundleCompute repository is a private repository under development that
 The goal of this work is to create a multi-purpose tools for analyzing heterogeneous cardiac microtissue deformation and strain from movies of beating microtissue. At present, we have a preliminary version of the code working, and we are in the process of making it fully automated and fully validated. If you have example data that you would like to include in this endeavor please get in touch.
 
 <p align = "center">
-<img alt="tracking visualization" src="tutorials/figs/abs_disp_short.gif" width="50%" />
+<img alt="tracking visualization" src="tutorials/figs/abs_disp_short.gif" width="75%" />
 </p>
 
 ## Installation Instructions <a name="install"></a>
@@ -162,7 +162,7 @@ In these text files, the rows correspond to individual markers, while the column
 The outputs of running the visualization code will be stored in the ``visualizations`` folder. Here, we plot absolute displacement of the identified markers. There is an optional argument in the visualization script that can be used to set the displacement bounds and the colormap. The default is absolute displacement ranging from 0-10 pixels, and the default colormap is ``cividis`` (see https://matplotlib.org/stable/tutorials/colors/colormaps.html for options). The output visualizations are stored as ``.pngs``, ``.gif`` and ``.mp4``.
 
 <p align = "center">
-<img alt="tracking visualization" src="tutorials/figs/abs_disp_long.gif" width="50%" />
+<img alt="tracking visualization" src="tutorials/figs/abs_disp_long.gif" width="75%" />
 </p>
 
 ## Validation <a name="validation"></a>
