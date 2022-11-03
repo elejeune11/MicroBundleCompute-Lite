@@ -28,6 +28,10 @@ The MicroBundleCompute repository is a private repository under development that
 
 The goal of this work is to create a multi-purpose tools for analyzing heterogeneous cardiac microtissue deformation and strain from movies of beating microtissue. At present, we have a preliminary version of the code working, and we are in the process of making it fully automated and fully validated. If you have example data that you would like to include in this endeavor please get in touch.
 
+<p align = "center">
+<img alt="tracking visualization" src="tutorials/figs/abs_disp_short.gif" width="50%" />
+</p>
+
 ## Installation Instructions <a name="install"></a>
 
 ### Get a copy of the microbundle compute repository on your local machine
@@ -118,21 +122,25 @@ The mask will be contained in the ``masks`` folder. Critically:
 2. In our examples, ``tissue_mask.png`` is simply a visualization of this mask.
 3. Future functionality will involve code for automatically generated masks.
 
-TODO: show schematic!
+Here is how the folders will be structured:
+```bash
+|___ Example_folder
+|        |___ movie
+|                |___"*.TIF"
+|        |___ masks
+|                |___"tissue_mask.txt"
+|                |___"tissue_mask.png"      (optional)
+```
 
 (Note: more sophisticated I/O is currently under development, and will include input files etc.)
 
 ### Running the code
 
-Once all of the previous steps are completed, running the code is actually quite straightforward. To run the tutorial examples, navigate terminal so that your current directory is in the ``tutorials`` folder. To run the code on the provided single example, type:
+Once all of the previous steps are completed, running the code is actually quite straightforward. To run the tutorial examples, navigate in the terminal so that your current directory is in the ``tutorials`` folder. To run the code on the provided single example, type:
 ```bash
-python run_code_tutorial.py files/real_example_long False
+python run_code_tutorial.py files/example_data
 ```
-And it will automatically run the example specified by the ``files/real_example_long`` folder without running the associated visualization function. If instead you type:
-```bash
-python run_code_tutorial.py files/real_example_long True
-```
-the visualization code will run as well. You can use the ``run_code_tutorial.py`` to run your own code, you just need to specify a relative path between your current working directory (i.e., the directory that your ``Terminal`` is in) and the data that you want to analyze. Alternatively, you can modify ``run_code_tutorial.py`` to make running code more conveneint.
+And it will automatically run the example specified by the ``files/example_data`` folder and the associated visualization function. You can use the ``run_code_tutorial.py`` to run your own code, you just need to specify a relative path between your current working directory (i.e., the directory that your ``Terminal`` is in) and the data that you want to analyze. Alternatively, you can modify ``run_code_tutorial.py`` to make running code more conveneint (i.e., remove command line arguments, skip the visualization step).
 
 ### Understanding the output files
 
@@ -153,7 +161,9 @@ In these text files, the rows correspond to individual markers, while the column
 
 The outputs of running the visualization code will be stored in the ``visualizations`` folder. Here, we plot absolute displacement of the identified markers. There is an optional argument in the visualization script that can be used to set the displacement bounds and the colormap. The default is absolute displacement ranging from 0-10 pixels, and the default colormap is ``cividis`` (see https://matplotlib.org/stable/tutorials/colors/colormaps.html for options). The output visualizations are stored as ``.pngs``, ``.gif`` and ``.mp4``.
 
-SHOW EXAMPLE HERE!!
+<p align = "center">
+<img alt="tracking visualization" src="tutorials/figs/abs_disp_long.gif" width="50%" />
+</p>
 
 ## Validation <a name="validation"></a>
 
