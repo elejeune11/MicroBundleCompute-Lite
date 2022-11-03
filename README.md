@@ -71,15 +71,15 @@ pip install -e .
 4. If you would like to see what packages this has installed, you can type ``pip list``
 5. You can test that the code is working with pytest (all tests should pass):
 ```bash
-pytest -v --cov=microbundlecompute-lite  --cov-report term-missing
+pytest -v --cov=microbundlecomputelite  --cov-report term-missing
 ```
-6. To run the code from the terminal, simply start python (type ``python``) and then type ``from microbundlecompute-lite import image_analysis as ia``. For example:
+6. To run the code from the terminal, simply start python (type ``python``) and then type ``from microbundlecomputelite import image_analysis as ia``. For example:
 ```bash
 (microbundle-compute-env) eml-macbook-pro:microbundlecompute-lite-main emma$ python
 Python 3.9.13 | packaged by conda-forge | (main, May 27 2022, 17:01:00) 
 [Clang 13.0.1 ] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
->>> from microbundlecompute-lite import image_analysis as ia
+>>> from microbundlecomputelite import image_analysis as ia
 >>> ia.hello_microbundle_compute()
 >>> "Hello World!
 ```
