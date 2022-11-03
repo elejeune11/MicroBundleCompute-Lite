@@ -20,12 +20,13 @@ classifiers = [
 ]
 dependencies = [
     "attrs==22.1.0",
-    "contourpy==1.0.5",
     "certifi==2022.9.24",
     "charset-normalizer==2.1.1",
+    "contourpy==1.0.5",
     "coverage==6.5.0",
     "cycler==0.11.0",
     "decorator==4.4.2",
+    "ffmpeg==1.4",
     "flake8==5.0.4",
     "fonttools==4.38.0",
     "idna==3.4",

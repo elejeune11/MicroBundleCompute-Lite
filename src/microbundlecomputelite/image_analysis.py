@@ -1,6 +1,6 @@
 import cv2
 import glob
-import imageio
+import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 import moviepy.editor as mp
 import numpy as np
