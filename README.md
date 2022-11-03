@@ -150,8 +150,8 @@ The outputs of running this code will be stored in the ``results`` folder. The f
 and mean that beat 0 starts at frame 3 and ends at frame 25, beat 1 starts at frame 25 and ends at frame 49, and beat 2 starts at frame 49 and ends at frame 72. Note that if full beats cannot be segmented from the timeseries data there may be issues with running the code. Often, the visually apparent first and last beat will be excluded from this segmentation because we cannot identify clear start and end points.
 
 Then, there will be one row-position file and one col-position file for each beat. The ``row`` and ``col`` positions match the original image provided. Specifically:
-* ``beat%i_row_pos.txt`` will contain the row positions of each marker for the beat specified by ``%i``
-* ``beat%i_col_pos.txt`` will contain the column positions of each marker for the beat specified by ``%i``
+* ``beat%i_row_pos.txt`` will contain the image row positions of each marker for the beat specified by ``%i``
+* ``beat%i_col_pos.txt`` will contain the image column positions of each marker for the beat specified by ``%i``
 In these text files, the rows correspond to individual markers, while the columns correspond to the frames of the beat. For example, if a file has dimension ``AA x BB``, there will be ``AA`` markers and ``BB`` frames.
 
 ### Understanding the visualization results
