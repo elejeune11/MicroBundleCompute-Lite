@@ -2,3 +2,9 @@
 /.coverage.eml-macbook-pro.lan.43059.587312
 /.pytest_cache
 /.vscode
+tutorials/files/example_data/.DS_Store
+tutorials/.DS_Store
+src/.DS_Store
+.gitignore
+.DS_Store
+.gitignore

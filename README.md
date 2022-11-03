@@ -178,7 +178,7 @@ Related repositories include:
 
 ## Contact Information <a name="contact"></a>
 
-For additional information, please contact Emma Lejeune ``elejeune@bu.edu``.
+For additional information, please contact Emma Lejeune ``elejeune@bu.edu`` or Hiba Kobeissi ``hibakob@bu.edu``.
 
 ## Acknowledgements <a name="acknowledge"></a>
 
