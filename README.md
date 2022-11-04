@@ -62,7 +62,7 @@ Note that once you have created this virtual environment you can ``activate`` an
 
 ### Install microbundle compute
 
-1. Use a ``Terminal`` session to navigate to the ``microbundlecompute-lite-main`` folder. The command ``cd`` will allow you to do this (see: [terminal cheat sheet](https://terminalcheatsheet.com/))
+1. Use a ``Terminal`` session to navigate to the ``microbundlecompute-lite-main`` folder (i.e., change your working directory). The command ``cd`` will allow you to do this (see: [terminal cheat sheet](https://terminalcheatsheet.com/))
 2. Type the command ``ls`` and make sure that the file ``pyproject.toml`` is in the current directory.
 3. Now, create an editable install of microbundle compute:
 ```bash
@@ -86,7 +86,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Tutorial <a name="tutorial"></a>
 
-This GitHub repository contains a folder called ``tutorials`` that contains an example dataset and python script for running the code.
+This GitHub repository contains a folder called ``tutorials`` that contains an example dataset and python script for running the code. To run the tutorials, change your curent working directory to the ``tutorials`` folder.
 
 ### Preparing data for analysis <a name="data_prep"></a>
 
@@ -133,11 +133,27 @@ Here is how the folders will be structured:
 
 ### Running the code
 
-Once all of the previous steps are completed, running the code is actually quite straightforward. To run the tutorial examples, navigate in the terminal so that your current directory is in the ``tutorials`` folder. To run the code on the provided single example, type:
+Once all of the previous steps are completed, running the code is actually quite straightforward. To run the tutorial examples, navigate in the Terminal so that your current working directory is in the ``tutorials`` folder. To run the code on the provided single example, type:
 ```bash
 python run_code_tutorial.py files/example_data
 ```
-And it will automatically run the example specified by the ``files/example_data`` folder and the associated visualization function. You can use the ``run_code_tutorial.py`` to run your own code, you just need to specify a relative path between your current working directory (i.e., the directory that your ``Terminal`` is in) and the data that you want to analyze. Alternatively, you can modify ``run_code_tutorial.py`` to make running code more conveneint (i.e., remove command line arguments, skip the visualization step).
+And it will automatically run the example specified by the ``files/example_data`` folder and the associated visualization function. You can use the ``run_code_tutorial.py`` to run your own code, you just need to specify a relative path between your current working directory (i.e., the directory that your ``Terminal`` is in) and the data that you want to analyze. Alternatively, you can modify ``run_code_tutorial.py`` to make running code more conveneint (i.e., remove command line arguments, skip the visualization step). Here is how the outputs of the code will be structured (in the same folder as inputs ``movie`` and ``masks``):
+```bash
+|___ Example_folder
+|        |___ movie
+|                |___"*.TIF"
+|        |___ masks
+|                |___"tissue_mask.txt"
+|                |___"tissue_mask.png"      (optional)
+|        |___ results
+|                |___"beat%i_row.txt"
+|                |___"beat%i_col.txt"
+|                |___"info.txt"
+|        |___ visualizations
+|                |___pngs
+|                   |___"%04_disp.png"
+|                |___"abs_disp.gif"
+```
 
 ### Understanding the output files
 
