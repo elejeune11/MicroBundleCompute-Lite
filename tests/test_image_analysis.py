@@ -8,6 +8,7 @@ from skimage import io
 
 
 def test_hello_world():
+    # simple test to let the user know that install has worked
     res = ia.hello_microbundle_compute()
     assert res == "Hello World!"
 
