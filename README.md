@@ -188,6 +188,8 @@ Additional validation studies beyond basic testing are still underway and will b
 
 - [x] Share preliminary version of the code with collaborators
 - [ ] Update code according to collaborators needs -- please get in touch with requests or questions -- for example, would you like us to add functions to re-sample the locations of the displacement?, are there cases in your dataset where it is not possible to segment full beats?
+- [ ] Adjust code so that the dictionaries for timeseries segmentation are computed automatically
+- [ ] Adjust code so that the dictionaries for feature and tracking parameters can be conveniently adjusted
 - [ ] Continue validation and working on the full repository
 - [ ] In particular, add testing and tutorials for strain functionality
 
