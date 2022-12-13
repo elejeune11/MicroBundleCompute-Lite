@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import pytest
 from skimage import io
+from skimage.transform import estimate_transform, warp
 
 
 def test_hello_world():
@@ -200,6 +201,38 @@ def test_track_all_steps():
     _, lk_params = ia.get_tracking_param_dicts()
     assert np.max(diff_0) < lk_params["winSize"][0]
     assert np.max(diff_1) < lk_params["winSize"][1]
+
+
+def test_track_all_steps_warping():
+    # import first image
+    folder_path = movie_path("real_example_super_short")
+    name_list_path = ia.image_folder_to_path_list(folder_path)
+    tiff_list = ia.read_all_tiff(name_list_path)
+    file_path = tissue_mask_path("real_example_super_short")
+    mask = ia.read_txt_as_mask(file_path)
+    feature_params, lk_params = ia.get_tracking_param_dicts()
+    img_list_uint8 = ia.uint16_to_uint8_all(tiff_list)
+    img_uint8_0 = img_list_uint8[0]
+    track_points_0 = ia.mask_to_track_points(img_uint8_0, mask, feature_params)
+    # warp image by a known amount
+    img_0 = img_uint8_0
+    src = np.dstack([track_points_0[:, 0, 0].flat, track_points_0[:, 0, 1].flat])[0]
+    diff_value = 2.0
+    dst = src + diff_value
+    tform = estimate_transform('projective', src, dst)
+    tform.estimate(src, dst)
+    img_1 = warp(img_0, tform, order=1, preserve_range=True)
+    # perform tracking
+    tiff_list = [img_0, img_1]
+    img_list_uint8 = ia.uint16_to_uint8_all(tiff_list)
+    tracker_0, tracker_1 = ia.track_all_steps(img_list_uint8, mask)
+    diff_0 = np.abs(tracker_0[:, 0] - tracker_0[:, -1])
+    diff_1 = np.abs(tracker_1[:, 0] - tracker_1[:, -1])
+    # measure difference wrt ground truth
+    assert np.mean(diff_0) > diff_value - 0.02
+    assert np.mean(diff_0) < diff_value + 0.02
+    assert np.mean(diff_1) > diff_value - 0.02
+    assert np.mean(diff_1) < diff_value + 0.02
 
 
 def test_compute_abs_position_timeseries():

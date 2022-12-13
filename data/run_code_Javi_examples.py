@@ -25,5 +25,3 @@ ia.run_tracking(input_folder)
 col_max = 3
 col_map = plt.cm.viridis
 png_path_list, gif_path = ia.run_visualization(input_folder, col_max, col_map)
-
-
