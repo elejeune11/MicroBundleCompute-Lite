@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from pathlib import Path
+from scipy.interpolate import RBFInterpolator
 from scipy.signal import find_peaks
 from skimage import exposure
 from skimage import img_as_ubyte
@@ -298,3 +299,17 @@ def run_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_ma
     # create mp4
     # mp4_path = create_mp4(folder_path, gif_path)
     return png_path_list, gif_path
+
+
+def interpolate_points(
+    row_col_pos: np.ndarray,
+    row_col_vals: np.ndarray,
+    row_col_sample: np.ndarray,
+) -> np.ndarray:
+    """Given row/column positions, row/column values, and sample positions.
+    Will interpolate the values and return values at the sample positions."""
+    # fit interpolation function and perform interpolation
+    row_sample_vals = RBFInterpolator(row_col_pos, row_col_vals[:, 0])(row_col_sample)
+    col_sample_vals = RBFInterpolator(row_col_pos, row_col_vals[:, 1])(row_col_sample)
+    row_col_sample_vals = np.hstack((row_sample_vals.reshape((-1, 1)), col_sample_vals.reshape((-1, 1))))
+    return row_col_sample_vals

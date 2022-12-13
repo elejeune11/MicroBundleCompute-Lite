@@ -347,3 +347,29 @@ def test_run_visualization():
     for pa in png_path_list:
         assert pa.is_file()
     assert gif_path.is_file()
+
+
+def interp_fcn_example(xy_vec):
+    x_vec = xy_vec[:, 0]
+    y_vec = xy_vec[:, 1]
+    x_vec_new = np.sin(x_vec) + x_vec * 5.0
+    y_vec_new = x_vec * y_vec
+    return np.hstack((x_vec_new.reshape((-1, 1)), y_vec_new.reshape((-1, 1))))
+
+
+def test_interpolate_points():
+    x_vec = np.linspace(0, 10, 20)
+    y_vec = np.linspace(0, 10, 20)
+    x_grid, y_grid = np.meshgrid(x_vec, y_vec)
+    row_col_pos = np.hstack((x_grid.reshape((-1, 1)), y_grid.reshape((-1, 1))))
+    x_vec_sample = np.linspace(0.5, 9.5, 4)
+    y_vec_sample = np.linspace(0.5, 9.5, 4)
+    x_grid_s, y_grid_s = np.meshgrid(x_vec_sample, y_vec_sample)
+    row_col_sample = np.hstack((x_grid_s.reshape((-1, 1)), y_grid_s.reshape((-1, 1))))
+    row_col_vals = row_col_pos * 2.0
+    row_col_sample_vals = ia.interpolate_points(row_col_pos, row_col_vals, row_col_sample)
+    assert np.allclose(row_col_sample_vals, row_col_sample * 2.0, atol=0.01)
+    row_col_vals = interp_fcn_example(row_col_pos)
+    row_col_sample_gt = interp_fcn_example(row_col_sample)
+    row_col_sample_vals = ia.interpolate_points(row_col_pos, row_col_vals, row_col_sample)
+    assert np.allclose(row_col_sample_gt, row_col_sample_vals, atol=0.01)
