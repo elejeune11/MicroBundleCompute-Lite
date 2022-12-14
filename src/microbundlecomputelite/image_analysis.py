@@ -366,16 +366,14 @@ def axis_from_mask(mask: np.ndarray) -> np.ndarray:
     mask_mod = insert_borders(mask, border)
     # find contour
     mask_thresh_blur = ndimage.gaussian_filter(mask_mod, 1)
-    # might need to fill holes -- will return to this later
     cnts = measure.find_contours(mask_thresh_blur, 0.75)[0].astype(np.int32)
-    # cnts = cv2.findContours(mask_thresh_blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     # find minimum area bounding rectangle
     rect = cv2.minAreaRect(cnts)
     box = np.int0(cv2.boxPoints(rect))
     vec = box_to_unit_vec(box)
     center_row, center_col = box_to_center_points(box)
     return center_row, center_col, vec
+
 
 # def rotate_results():
 #     return
