@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from pathlib import Path
+from skimage import measure
+from scipy import ndimage
 from scipy.interpolate import RBFInterpolator
 from scipy.signal import find_peaks
 from skimage import exposure
@@ -313,3 +315,70 @@ def interpolate_points(
     col_sample_vals = RBFInterpolator(row_col_pos, row_col_vals[:, 1])(row_col_sample)
     row_col_sample_vals = np.hstack((row_sample_vals.reshape((-1, 1)), col_sample_vals.reshape((-1, 1))))
     return row_col_sample_vals
+
+
+def compute_distance(x1: Union[int, float], x2: Union[int, float], y1: Union[int, float], y2: Union[int, float]) -> Union[int, float]:
+    """Given two 2D points. Will return the distance between them."""
+    dist = ((x1 - x2) ** 2.0 + (y1 - y2) ** 2.0) ** 0.5
+    return dist
+
+
+def compute_unit_vector(x1: Union[int, float], x2: Union[int, float], y1: Union[int, float], y2: Union[int, float]) -> np.ndarray:
+    """Given two 2D points. Will return the unit vector between them"""
+    dist = compute_distance(x1, x2, y1, y2)
+    vec = np.asarray([(x2 - x1) / dist, (y2 - y1) / dist])
+    return vec
+
+
+def insert_borders(mask: np.ndarray, border: int = 10) -> np.ndarray:
+    """Given a mask. Will make the borders around it 0."""
+    mask[0:border, :] = 0
+    mask[-border:, :] = 0
+    mask[:, 0:border] = 0
+    mask[:, -border:] = 0
+    return mask
+
+
+def box_to_unit_vec(box: np.ndarray) -> np.ndarray:
+    """Given the rectangular box. Will compute the unit vector of the longest side."""
+    side_1 = compute_distance(box[0, 0], box[1, 0], box[0, 1], box[1, 1])
+    side_2 = compute_distance(box[1, 0], box[2, 0], box[1, 1], box[2, 1])
+    if side_1 > side_2:
+        # side_1 is the long axis
+        vec = compute_unit_vector(box[0, 0], box[1, 0], box[0, 1], box[1, 1])
+    else:
+        # side_2 is the long axis
+        vec = compute_unit_vector(box[1, 0], box[2, 0], box[1, 1], box[2, 1])
+    return vec
+
+
+def box_to_center_points(box: np.ndarray) -> float:
+    """Given the rectangular box. Will compute the center as the midpoint of a diagonal."""
+    center_row = np.mean([box[0, 0], box[2, 0]])
+    center_col = np.mean([box[0, 1], box[2, 1]])
+    return center_row, center_col
+
+
+def axis_from_mask(mask: np.ndarray) -> np.ndarray:
+    """Given a folder path. Will import the mask and determine it's long axis."""
+    # insert borders to the mask
+    border = 10
+    mask_mod = insert_borders(mask, border)
+    # find contour
+    mask_thresh_blur = ndimage.gaussian_filter(mask_mod, 1)
+    # might need to fill holes -- will return to this later
+    cnts = measure.find_contours(mask_thresh_blur, 0.75)[0].astype(np.int32)
+    # cnts = cv2.findContours(mask_thresh_blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    # find minimum area bounding rectangle
+    rect = cv2.minAreaRect(cnts)
+    box = np.int0(cv2.boxPoints(rect))
+    vec = box_to_unit_vec(box)
+    center_row, center_col = box_to_center_points(box)
+    return center_row, center_col, vec
+
+# def rotate_results():
+#     return
+
+# def transform_coordinate_system():
+# --> go to microns, and then also move origin etc. as needed

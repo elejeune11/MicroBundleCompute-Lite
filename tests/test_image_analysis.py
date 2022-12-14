@@ -373,3 +373,75 @@ def test_interpolate_points():
     row_col_sample_gt = interp_fcn_example(row_col_sample)
     row_col_sample_vals = ia.interpolate_points(row_col_pos, row_col_vals, row_col_sample)
     assert np.allclose(row_col_sample_gt, row_col_sample_vals, atol=0.01)
+
+
+def test_compute_distance():
+    x1 = 0
+    x2 = 10
+    y1 = 0
+    y2 = 0
+    dist = ia.compute_distance(x1, x2, y1, y2)
+    assert np.isclose(dist, 10)
+
+
+def test_compute_unit_vector():
+    x1 = 0
+    x2 = 10
+    y1 = 0
+    y2 = 0
+    vec = ia.compute_unit_vector(x1, x2, y1, y2)
+    assert np.allclose(vec, np.asarray([1, 0]))
+
+
+def test_insert_borders():
+    mask = np.ones((50, 50))
+    border = 10
+    mask = ia.insert_borders(mask, border)
+    assert np.sum(mask) == 30 * 30
+
+
+def test_axis_from_mask():
+    # create an artificial mask
+    mask = np.zeros((100, 100))
+    mask[25:75, 45:55] = 1
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    assert np.allclose(vec, np.asarray([1, 0])) or np.allclose(vec, np.asarray([-1, 0]))
+    assert np.isclose(center_row, (25 + 74) / 2.0, atol=2)
+    assert np.isclose(center_col, (46 + 53) / 2.0, atol=2)
+    mask = np.zeros((100, 100))
+    mask[45:55, 25:75] = 1
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    assert np.allclose(vec, np.asarray([0, 1])) or np.allclose(vec, np.asarray([0, -1]))
+    assert np.isclose(center_col, (25 + 74) / 2.0, atol=2)
+    assert np.isclose(center_row, (46 + 53) / 2.0, atol=2)
+    # real example
+    file_path = tissue_mask_path("real_example_super_short")
+    mask = ia.read_txt_as_mask(file_path)
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    assert np.isclose(center_row, mask.shape[0] / 2.0, atol=10)
+    assert np.isclose(center_col, mask.shape[0] / 2.0, atol=10)
+    assert np.allclose(vec, np.asarray([0, 1]), atol=.1) or np.allclose(vec, np.asarray([0, -1]), atol=.1)
+    # rotated example
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    assert np.isclose(center_row, (10 + 50) / 2.0, atol=4)
+    assert np.isclose(center_col, (30 + 80) / 2.0, atol=4)
+    assert np.allclose(vec, np.asarray([np.sqrt(2) / 2.0, np.sqrt(2) / 2.0]))
+
+
+def test_box_to_center_points():
+    box = np.asarray([[0, 0], [0, 10], [5, 10], [5, 0]])
+    center_row, center_col = ia.box_to_center_points(box)
+    assert np.isclose(center_row, 2.5)
+    assert np.isclose(center_col, 5.0)
+
+
+def test_box_to_unit_vec():
+    box = np.asarray([[0, 0], [0, 10], [5, 10], [5, 0]])
+    vec = ia.box_to_unit_vec(box)
+    assert np.allclose(vec, np.asarray([0, 1]), atol=.1) or np.allclose(vec, np.asarray([0, -1]), atol=.1)
+    box = np.asarray([[0, 0], [0, 5], [10, 5], [10, 0]])
+    vec = ia.box_to_unit_vec(box)
+    assert np.allclose(vec, np.asarray([1, 0])) or np.allclose(vec, np.asarray([-1, 0]))
