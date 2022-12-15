@@ -13,7 +13,8 @@ from scipy.signal import find_peaks
 from skimage import exposure
 from skimage import img_as_ubyte
 from skimage import io
-from typing import List, Union
+from skimage.transform import rotate
+from typing import List, Tuple, Union
 
 
 def hello_microbundle_compute() -> str:
@@ -375,8 +376,114 @@ def axis_from_mask(mask: np.ndarray) -> np.ndarray:
     return center_row, center_col, vec
 
 
-# def rotate_results():
+def rot_vec_to_rot_mat_and_angle(vec: np.ndarray) -> Tuple[np.ndarray, float]:
+    """Given a rotation vector. Will return a rotation matrix and rotation angle."""
+    ang = np.arctan2(vec[0], vec[1])
+    rot_mat = np.asarray([[np.cos(ang), -1.0 * np.sin(ang)], [np.sin(ang), np.cos(ang)]])
+    return (rot_mat, ang)
+
+
+def rot_image(
+    img: np.ndarray,
+    center_row: Union[float, int],
+    center_col: Union[float, int],
+    ang: float
+) -> np.ndarray:
+    """Given an image and rotation information. Will return rotated image."""
+    new_img = rotate(img, ang / (np.pi) * 180, center=(center_col, center_row))
+    return new_img
+
+
+def rotate_points(
+    row_pts: np.ndarray,
+    col_pts: np.ndarray,
+    rot_mat: np.ndarray,
+    center_row: Union[float, int],
+    center_col: Union[float, int]
+) -> np.ndarray:
+    """Given array vectors of points, rotaton matrix, and point to rotate about. 
+    Will perform rotation and return rotated points"""
+    row_pts_centered = row_pts - center_row
+    col_pts_centered = col_pts - center_col
+    pts = np.hstack((row_pts_centered.reshape((-1, 1)), col_pts_centered.reshape((-1, 1)))).T
+    pts_rotated = rot_mat @ pts
+    new_row_pts = pts_rotated[0, :] + center_row
+    new_col_pts = pts_rotated[1, :] + center_col
+    return new_row_pts, new_col_pts
+
+
+def rotate_points_array(
+    row_pts_array: np.ndarray,
+    col_pts_array: np.ndarray,
+    rot_mat: np.ndarray,
+    center_row: Union[float, int],
+    center_col: Union[float, int]
+) -> np.ndarray:
+    """Given an array of row points and column points. Will rotate the whole array."""
+    rot_row_pts_array = np.zeros(row_pts_array.shape)
+    rot_col_pts_array = np.zeros(col_pts_array.shape)
+    num_steps = row_pts_array.shape[1]
+    for kk in range(0, num_steps):
+        row_pts = row_pts_array[:, kk]
+        col_pts = col_pts_array[:, kk]
+        rot_row_pts, rot_col_pts = rotate_points(row_pts, col_pts, rot_mat, center_row, center_col)
+        rot_row_pts_array[:, kk] = rot_row_pts
+        rot_col_pts_array[:, kk] = rot_col_pts
+    return rot_row_pts_array, rot_col_pts_array
+
+
+def rotate_pts_all(
+    row_pts_array_list: List,
+    col_pts_array_list: List,
+    rot_mat: np.ndarray,
+    center_row: Union[float, int],
+    center_col: Union[float, int]
+) -> np.ndarray:
+    """Given a list of row and column point arrays. Will rotate all of them."""
+    rot_row_pts_array_list = []
+    rot_col_pts_array_list = []
+    num_arrays = len(row_pts_array_list)
+    for kk in range(0, num_arrays):
+        row_pts_array = row_pts_array_list[kk]
+        col_pts_array = col_pts_array_list[kk]
+        rot_row_pts_array, rot_col_pts_array = rotate_points_array(row_pts_array, col_pts_array, rot_mat, center_row, center_col)
+        rot_row_pts_array_list.append(rot_row_pts_array)
+        rot_col_pts_array_list.append(rot_col_pts_array)
+    return rot_row_pts_array_list, rot_col_pts_array_list
+
+
+def rotate_imgs_all(
+    tiff_list: List,
+    ang: float,
+    center_row: Union[float, int],
+    center_col: Union[float, int]
+) -> np.ndarray:
+    """Given tiff_list and rotation info. Will return all images rotated."""
+    rot_tiff_list = []
+    for kk in range(0, len(tiff_list)):
+        rot_img = rot_image(tiff_list[kk], center_row, center_col, ang)
+        rot_tiff_list.append(rot_img)
+    return rot_tiff_list
+
+
+# perform rotation
+
+# save rotated points
+
+# save rotated pngs
+
+# should be able to then apply typical save png function
+
+# def get_rotation_coordinate_transform():
 #     return
 
-# def transform_coordinate_system():
-# --> go to microns, and then also move origin etc. as needed
+# def transform_coordinate_system(
+#     mask: np.ndarray,
+#     microns_per_pixel_row: Union[int, float],
+#     microns_per_pixel_col: Union[int, float],
+#     tracker_row_all: np.ndarray,
+#     tracker_col_all: np.ndarray
+# ) -> np.ndarray:
+#     """Given ."""
+
+#     return transformed_tracker_row_all, transformed_tracker_col_all

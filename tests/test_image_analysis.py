@@ -445,3 +445,130 @@ def test_box_to_unit_vec():
     box = np.asarray([[0, 0], [0, 5], [10, 5], [10, 0]])
     vec = ia.box_to_unit_vec(box)
     assert np.allclose(vec, np.asarray([1, 0])) or np.allclose(vec, np.asarray([-1, 0]))
+
+
+def test_rot_vec_to_rot_mat_and_angle():
+    vec = [1, 0]
+    (rot_mat, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    assert np.isclose(ang, np.pi / 2.0)
+    assert np.allclose(rot_mat, np.asarray([[0, -1], [1, 0]]))
+    vec = [0, 1]
+    (rot_mat, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    assert np.isclose(ang, 0)
+    assert np.allclose(rot_mat, np.asarray([[1, 0], [0, 1]]))
+    vec = [np.sqrt(2) / 2.0, np.sqrt(2) / 2.0]
+    (rot_mat, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    assert np.isclose(ang, np.pi / 4.0)
+
+
+def test_rot_image():
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    (_, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    new_img = ia.rot_image(mask, center_row, center_col, ang)
+    new_center_row, new_center_col, new_vec = ia.axis_from_mask(new_img)
+    assert np.isclose(center_row, new_center_row, atol=2)
+    assert np.isclose(center_col, new_center_col, atol=2)
+    assert np.allclose(new_vec, np.asarray([0, 1]))
+
+
+def test_rotate_points():
+    row_pts = []
+    col_pts = []
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+        row_pts.append(kk)
+        col_pts.append(kk + 25)
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    (rot_mat, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    row_pts = np.asarray(row_pts)
+    col_pts = np.asarray(col_pts)
+    new_row_pts, new_col_pts = ia.rotate_points(row_pts, col_pts, rot_mat, center_row, center_col)
+    new_img = ia.rot_image(mask, center_row, center_col, ang)
+    # plt.figure()
+    # plt.imshow(new_img)
+    # plt.plot(new_col_pts, new_row_pts, "r.")
+    # plt.figure()
+    # plt.imshow(mask)
+    # plt.plot(col_pts, row_pts, "r.")
+    vals = np.nonzero(new_img)
+    min_col = np.min(vals[1])
+    max_col = np.max(vals[1])
+    mean_col = np.mean(vals[1])
+    assert np.allclose(new_row_pts, center_row * np.ones(new_row_pts.shape[0]), atol=1)
+    assert np.isclose(min_col, np.min(new_col_pts), atol=5)
+    assert np.isclose(max_col, np.max(new_col_pts), atol=5)
+    assert np.isclose(mean_col, np.mean(new_col_pts), atol=5)
+
+
+def test_rotate_points_array():
+    row_pts = []
+    col_pts = []
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+        row_pts.append(kk)
+        col_pts.append(kk + 25)
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    (rot_mat, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    new_img = ia.rot_image(mask, center_row, center_col, ang)
+    vals = np.nonzero(new_img)
+    min_col = np.min(vals[1])
+    max_col = np.max(vals[1])
+    mean_col = np.mean(vals[1])
+    row_pts = np.asarray(row_pts)
+    col_pts = np.asarray(col_pts)
+    num_reps = 5
+    row_pts_array = np.tile(row_pts.reshape((-1, 1)), (1, num_reps))
+    col_pts_array = np.tile(col_pts.reshape((-1, 1)), (1, num_reps))
+    new_row_pts_array, new_col_pts_array = ia.rotate_points_array(row_pts_array, col_pts_array, rot_mat, center_row, center_col)
+    for kk in range(0, num_reps):
+        new_row_pts = new_row_pts_array[:, kk]
+        new_col_pts = new_col_pts_array[:, kk]
+        assert np.allclose(new_row_pts, center_row * np.ones(new_row_pts.shape[0]), atol=1)
+        assert np.isclose(min_col, np.min(new_col_pts), atol=5)
+        assert np.isclose(max_col, np.max(new_col_pts), atol=5)
+        assert np.isclose(mean_col, np.mean(new_col_pts), atol=5)
+
+
+def test_rotate_pts_all():
+    row_pts = []
+    col_pts = []
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+        row_pts.append(kk)
+        col_pts.append(kk + 25)
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    (rot_mat, _) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    row_pts = np.asarray(row_pts)
+    col_pts = np.asarray(col_pts)
+    num_reps = 5
+    row_pts_array = np.tile(row_pts.reshape((-1, 1)), (1, num_reps))
+    col_pts_array = np.tile(col_pts.reshape((-1, 1)), (1, num_reps))
+    row_pts_array_list = [row_pts_array, row_pts_array, row_pts_array]
+    col_pts_array_list = [col_pts_array, col_pts_array, col_pts_array]
+    rot_row_pts_array_list, rot_col_pts_array_list = ia.rotate_pts_all(row_pts_array_list, col_pts_array_list, rot_mat, center_row, center_col)
+    assert np.allclose(rot_row_pts_array_list[0], rot_row_pts_array_list[1])
+    assert np.allclose(rot_row_pts_array_list[1], rot_row_pts_array_list[2])
+    assert np.allclose(rot_col_pts_array_list[0], rot_col_pts_array_list[1])
+    assert np.allclose(rot_col_pts_array_list[1], rot_col_pts_array_list[2])
+
+
+def test_rotate_imgs_all():
+    mask = np.zeros((100, 100))
+    for kk in range(10, 50):
+        mask[kk, kk + 20:kk + 30] = 1
+    center_row, center_col, vec = ia.axis_from_mask(mask)
+    (_, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    mask_list = [mask, mask, mask]
+    rot_mask_list = ia.rotate_imgs_all(mask_list, ang, center_row, center_col)
+    for kk in range(0, len(mask_list)):
+        new_img = rot_mask_list[kk]
+        new_center_row, new_center_col, new_vec = ia.axis_from_mask(new_img)
+        assert np.isclose(center_row, new_center_row, atol=2)
+        assert np.isclose(center_col, new_center_col, atol=2)
+        assert np.allclose(new_vec, np.asarray([0, 1]))
