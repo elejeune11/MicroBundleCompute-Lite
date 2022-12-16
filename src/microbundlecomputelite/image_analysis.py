@@ -174,20 +174,30 @@ def split_tracking(tracker_0: np.ndarray, tracker_1: np.ndarray, info: np.ndarra
     return tracker_0_all, tracker_1_all
 
 
-def save_tracking(folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray) -> List:
+def save_tracking(*, folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray = None, is_rotated: bool = False, rot_info: np.ndarray = None) -> List:
     """Given tracking results. Will save as text files."""
     new_path = create_folder(folder_path, "results")
-    num_beats = info.shape[0]
+    num_beats = len(tracker_0_all)
     saved_paths = []
     for kk in range(0, num_beats):
-        file_path = new_path.joinpath("beat%i_row.txt" % (kk)).resolve()
+        if is_rotated:
+            file_path = new_path.joinpath("rotated_beat%i_row.txt" % (kk)).resolve()
+        else:
+            file_path = new_path.joinpath("beat%i_row.txt" % (kk)).resolve()
         saved_paths.append(file_path)
         np.savetxt(str(file_path), tracker_1_all[kk])
-        file_path = new_path.joinpath("beat%i_col.txt" % (kk)).resolve()
+        if is_rotated:
+            file_path = new_path.joinpath("rotated_beat%i_col.txt" % (kk)).resolve()
+        else:
+            file_path = new_path.joinpath("beat%i_col.txt" % (kk)).resolve()
         np.savetxt(str(file_path), tracker_0_all[kk])
         saved_paths.append(file_path)
-    file_path = new_path.joinpath("info.txt").resolve()
-    np.savetxt(str(file_path), info)
+    if info is not None:
+        file_path = new_path.joinpath("info.txt").resolve()
+        np.savetxt(str(file_path), info)
+    if rot_info is not None:
+        file_path = new_path.joinpath("rot_info.txt").resolve()
+        np.savetxt(str(file_path), rot_info)
     saved_paths.append(file_path)
     return saved_paths
 
@@ -209,27 +219,38 @@ def run_tracking(folder_path: Path) -> List:
     # split tracking results
     tracker_0_all, tracker_1_all = split_tracking(tracker_0, tracker_1, info)
     # save tracking results
-    saved_paths = save_tracking(folder_path, tracker_0_all, tracker_1_all, info)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info)
     return saved_paths
 
 
-def load_tracking_results(folder_path: Path) -> List:
+def load_tracking_results(folder_path: Path, is_rotated: bool = False) -> List:
     """Given the folder path. Will load tracking results. If there are none, will return an error."""
     res_folder_path = folder_path.joinpath("results").resolve()
     if res_folder_path.exists() is False:
         raise FileNotFoundError("tracking results are not present -- tracking must be run before visualization")
-    num_files = len(glob.glob(str(res_folder_path) + "/*.txt"))
-    num_beats = int((num_files - 1) / 2)
+    rev_file_0 = res_folder_path.joinpath("rotated_beat0_col.txt").resolve()
+    if rev_file_0.exists() is False:
+        raise FileNotFoundError("rotated tracking results are not present -- rotated tracking must be run before rotated visualization")
+    num_files = len(glob.glob(str(res_folder_path) + "/beat*.txt"))
+    num_beats = int((num_files) / 2)
     tracker_row_all = []
     tracker_col_all = []
     for kk in range(0, num_beats):
-        tracker_row = np.loadtxt(str(res_folder_path) + "/beat%i_row.txt" % (kk))
-        tracker_col = np.loadtxt(str(res_folder_path) + "/beat%i_col.txt" % (kk))
+        if is_rotated:
+            tracker_row = np.loadtxt(str(res_folder_path) + "/rotated_beat%i_row.txt" % (kk))
+            tracker_col = np.loadtxt(str(res_folder_path) + "/rotated_beat%i_col.txt" % (kk))
+        else:
+            tracker_row = np.loadtxt(str(res_folder_path) + "/beat%i_row.txt" % (kk))
+            tracker_col = np.loadtxt(str(res_folder_path) + "/beat%i_col.txt" % (kk))
         tracker_row_all.append(tracker_row)
         tracker_col_all.append(tracker_col)
     info = np.loadtxt(str(res_folder_path) + "/info.txt")
     info_reshape = np.reshape(info, (-1, 3))
-    return tracker_row_all, tracker_col_all, info_reshape
+    if is_rotated is False:
+        return tracker_row_all, tracker_col_all, (info_reshape)
+    else:
+        rot_info = np.loadtxt(str(res_folder_path) + "/rot_info.txt")
+        return tracker_row_all, tracker_col_all, (info_reshape, rot_info)
 
 
 def create_pngs(
@@ -239,7 +260,8 @@ def create_pngs(
     tracker_col_all: List,
     info: np.ndarray,
     col_max: Union[float, int],
-    col_map: object
+    col_map: object,
+    is_rotated: bool = False
 ) -> List:
     """Given tracking results. Will create png version of the visualizations."""
     vis_folder_path = create_folder(folder_path, "visualizations")
@@ -257,24 +279,33 @@ def create_pngs(
             plt.imshow(tiff_list[kk], cmap=plt.cm.gray)
             jj = kk - start_idx
             plt.scatter(tracker_col[:, jj], tracker_row[:, jj], c=disp_all[:, jj], s=10, cmap=col_map, vmin=0, vmax=col_max)
-            plt.title("frame %i, beat %i" % (kk, beat))
+            if is_rotated:
+                plt.title("rotated frame %i, beat %i" % (kk, beat))
+            else:
+                plt.title("frame %i, beat %i" % (kk, beat))
             cbar = plt.colorbar()
             cbar.ax.get_yaxis().labelpad = 15
-            cbar.set_label('absolute displacement (pixels)', rotation=270)
+            cbar.set_label("absolute displacement (pixels)", rotation=270)
             plt.axis("off")
-            path = pngs_folder_path.joinpath("%04d_disp.png" % (kk)).resolve()
+            if is_rotated:
+                path = pngs_folder_path.joinpath("rotated_%04d_disp.png" % (kk)).resolve()
+            else:
+                path = pngs_folder_path.joinpath("%04d_disp.png" % (kk)).resolve()
             plt.savefig(str(path))
             plt.close()
             path_list.append(path)
     return path_list
 
 
-def create_gif(folder_path: Path, png_path_list: List) -> Path:
+def create_gif(folder_path: Path, png_path_list: List, is_rotated: bool = False) -> Path:
     """Given the pngs path list. Will create a gif."""
     img_list = []
     for pa in png_path_list:
         img_list.append(imageio.imread(pa))
-    gif_path = folder_path.joinpath("visualizations").resolve().joinpath("abs_disp.gif").resolve()
+    if is_rotated:
+        gif_path = folder_path.joinpath("visualizations").resolve().joinpath("rotated_abs_disp.gif").resolve()
+    else:
+        gif_path = folder_path.joinpath("visualizations").resolve().joinpath("abs_disp.gif").resolve()
     imageio.mimsave(str(gif_path), img_list)
     return gif_path
 
@@ -294,7 +325,7 @@ def run_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_ma
     name_list_path = image_folder_to_path_list(movie_folder_path)
     tiff_list = read_all_tiff(name_list_path)
     # read tracking results
-    tracker_row_all, tracker_col_all, info = load_tracking_results(folder_path)
+    tracker_row_all, tracker_col_all, (info) = load_tracking_results(folder_path)
     # create pngs
     png_path_list = create_pngs(folder_path, tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map)
     # create gif
@@ -401,7 +432,7 @@ def rotate_points(
     center_row: Union[float, int],
     center_col: Union[float, int]
 ) -> np.ndarray:
-    """Given array vectors of points, rotaton matrix, and point to rotate about. 
+    """Given array vectors of points, rotaton matrix, and point to rotate about.
     Will perform rotation and return rotated points"""
     row_pts_centered = row_pts - center_row
     col_pts_centered = col_pts - center_col
@@ -466,16 +497,74 @@ def rotate_imgs_all(
     return rot_tiff_list
 
 
-# perform rotation
+def get_rotation_info(
+    *,
+    center_row_input: Union[float, int] = None,
+    center_col_input: Union[float, int] = None,
+    vec_input: np.ndarray = None,
+    mask: np.ndarray = None
+) -> Tuple[Union[float, int], Union[float, int], np.ndarray, Union[float, int]]:
+    """Given either prescribed rotation or mask.
+    Will compute rotation information (rotation matrix and angle).
+    Prescribed rotation will override rotation computed by the mask."""
+    if mask is not None:
+        center_row, center_col, vec = axis_from_mask(mask)
+    if center_row_input is not None:
+        center_row = center_row_input
+    if center_col_input is not None:
+        center_col = center_col_input
+    if vec_input is not None:
+        vec = vec_input
+    (rot_mat, ang) = rot_vec_to_rot_mat_and_angle(vec)
+    return (center_row, center_col, rot_mat, ang, vec)
 
-# save rotated points
 
-# save rotated pngs
+def run_rotation(
+    folder_path: Path,
+    input_mask: bool = True,
+    *,
+    center_row_input: Union[float, int] = None,
+    center_col_input: Union[float, int] = None,
+    vec_input: np.ndarray = None
+) -> List:
+    """Given rotation information. Will rotate the points according to the provided information."""
+    if input_mask:
+        mask_file_path = folder_path.joinpath("masks").resolve().joinpath("tissue_mask.txt").resolve()
+        mask = read_txt_as_mask(mask_file_path)
+        (center_row, center_col, rot_mat, _, vec) = get_rotation_info(center_row_input=center_row_input, center_col_input=center_col_input, vec_input=vec_input, mask=mask)
+    else:
+        (center_row, center_col, rot_mat, _, vec) = get_rotation_info(center_row_input=center_row_input, center_col_input=center_col_input, vec_input=vec_input)
+    # read tracking results
+    tracker_row_all, tracker_col_all, _ = load_tracking_results(folder_path, False)
+    # perform rotation
+    rot_tracker_row_all, rot_tracker_col_all = rotate_pts_all(tracker_row_all, tracker_col_all, rot_mat, center_row, center_col)
+    # save rotation info
+    rot_info = np.asarray([[center_row, center_col], [vec[0], vec[1]]])
+    # save rotation
+    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=rot_tracker_col_all, tracker_1_all=rot_tracker_row_all, is_rotated=True, rot_info=rot_info)
+    return saved_paths
 
-# should be able to then apply typical save png function
 
-# def get_rotation_coordinate_transform():
-#     return
+def run_rotation_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_map: object = plt.cm.viridis) -> List:
+    """Given a folder path where rotated tracking has already been run. Will save visualizations."""
+    # read image files
+    movie_folder_path = folder_path.joinpath("movie").resolve()
+    name_list_path = image_folder_to_path_list(movie_folder_path)
+    tiff_list = read_all_tiff(name_list_path)
+    # read rotated tracking results
+    tracker_row_all, tracker_col_all, (info, rot_info) = load_tracking_results(folder_path, True)
+    # rotate tiffs
+    center_row = rot_info[0, 0]
+    center_col = rot_info[0, 1]
+    vec = np.asarray([rot_info[1, 0], rot_info[1, 1]])
+    (_, ang) = rot_vec_to_rot_mat_and_angle(vec)
+    rot_tiff_list = rotate_imgs_all(tiff_list, ang, center_row, center_col)
+    # create pngs
+    png_path_list = create_pngs(folder_path, rot_tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map, True)
+    # create gif
+    gif_path = create_gif(folder_path, png_path_list, True)
+    return png_path_list, gif_path
+
 
 # def transform_coordinate_system(
 #     mask: np.ndarray,
@@ -484,6 +573,6 @@ def rotate_imgs_all(
 #     tracker_row_all: np.ndarray,
 #     tracker_col_all: np.ndarray
 # ) -> np.ndarray:
-#     """Given ."""
+#     """Given information on."""
 
 #     return transformed_tracker_row_all, transformed_tracker_col_all

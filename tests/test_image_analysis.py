@@ -289,9 +289,15 @@ def test_save_tracking():
     tracker_1 = np.ones((10, 100))
     info = [[0, 10, 30], [1, 30, 35], [2, 35, 85]]
     info = np.asarray(info)
+    rot_info = [[100, 150], [1, 0]]
+    rot_info = np.asarray(rot_info)
     tracker_0_all, tracker_1_all = ia.split_tracking(tracker_0, tracker_1, info)
     folder_path = example_path("real_example_super_short")
-    saved_paths = ia.save_tracking(folder_path, tracker_0_all, tracker_1_all, info)
+    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info)
+    for pa in saved_paths:
+        assert pa.is_file()
+    assert len(saved_paths) == info.shape[0] * 2 + 1
+    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info, is_rotated=True, rot_info=rot_info)
     for pa in saved_paths:
         assert pa.is_file()
     assert len(saved_paths) == info.shape[0] * 2 + 1
@@ -314,10 +320,16 @@ def test_load_tracking_results():
     assert len(tracker_col_all) == 1
     assert len(tracker_col_all) == 1
     assert info.shape[1] == 3
-    folder_path = example_path("fake_example_short")
+    folder_path = example_path("io_testing_examples")
+    folder_path_0 = folder_path.joinpath("fake_example_0").resolve()
     with pytest.raises(FileNotFoundError) as error:
-        ia.load_tracking_results(folder_path)
+        ia.load_tracking_results(folder_path_0)
     assert error.typename == "FileNotFoundError"
+    folder_path_1 = folder_path.joinpath("fake_example_1").resolve()
+    with pytest.raises(FileNotFoundError) as error:
+        ia.load_tracking_results(folder_path_1)
+    assert error.typename == "FileNotFoundError"
+    # NOTE: need to add reverse tracking example
 
 
 def test_create_pngs_gif():
@@ -572,3 +584,62 @@ def test_rotate_imgs_all():
         assert np.isclose(center_row, new_center_row, atol=2)
         assert np.isclose(center_col, new_center_col, atol=2)
         assert np.allclose(new_vec, np.asarray([0, 1]))
+
+
+def test_get_rotation_info():
+    # check case where all values are provided
+    center_row_known = 100
+    center_col_known = 200
+    vec_known = np.asarray([1, 0])
+    (rot_mat_known, ang_known) = ia.rot_vec_to_rot_mat_and_angle(vec_known)
+    (center_row_found, center_col_found, rot_mat_found, ang_found, vec_found) = ia.get_rotation_info(center_row_input=center_row_known, center_col_input=center_col_known, vec_input=vec_known)
+    assert np.allclose(rot_mat_known, rot_mat_found)
+    assert np.isclose(ang_known, ang_found)
+    assert np.isclose(center_row_known, center_row_found)
+    assert np.isclose(center_col_known, center_col_found)
+    assert np.allclose(vec_known, vec_found)
+    # check case where only mask is provided
+    file_path = tissue_mask_path("real_example_super_short")
+    mask = ia.read_txt_as_mask(file_path)
+    center_row_known, center_col_known, vec_known = ia.axis_from_mask(mask)
+    (rot_mat_known, ang_known) = ia.rot_vec_to_rot_mat_and_angle(vec_known)
+    (center_row_found, center_col_found, rot_mat_found, ang_found, vec_found) = ia.get_rotation_info(mask=mask)
+    assert np.allclose(rot_mat_known, rot_mat_found)
+    assert np.isclose(ang_known, ang_found)
+    assert np.isclose(center_row_known, center_row_found)
+    assert np.isclose(center_col_known, center_col_found)
+    assert np.allclose(vec_known, vec_found)
+    center_row_known = 10
+    (center_row_found, center_col_found, rot_mat_found, ang_found, vec_found) = ia.get_rotation_info(mask=mask, center_row_input=center_row_known)
+    assert np.allclose(rot_mat_known, rot_mat_found)
+    assert np.isclose(ang_known, ang_found)
+    assert np.isclose(center_row_known, center_row_found)
+    assert np.isclose(center_col_known, center_col_found)
+    assert np.allclose(vec_known, vec_found)
+
+
+def test_run_rotation():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    input_mask = True
+    saved_paths = ia.run_rotation(folder_path, input_mask)
+    for pa in saved_paths:
+        assert pa.is_file()
+    input_mask = False
+    cri = 100
+    cci = 150
+    vec_i = np.asarray([1, 0])
+    saved_paths = ia.run_rotation(folder_path, input_mask, center_row_input=cri, center_col_input=cci, vec_input=vec_i)
+    for pa in saved_paths:
+        assert pa.is_file()
+
+
+def test_run_rotation_visualization():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    input_mask = True
+    _ = ia.run_rotation(folder_path, input_mask)
+    png_path_list, gif_path = ia.run_rotation_visualization(folder_path)
+    for pa in png_path_list:
+        assert pa.is_file()
+    assert gif_path.is_file()
