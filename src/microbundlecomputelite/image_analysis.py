@@ -174,19 +174,23 @@ def split_tracking(tracker_0: np.ndarray, tracker_1: np.ndarray, info: np.ndarra
     return tracker_0_all, tracker_1_all
 
 
-def save_tracking(*, folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray = None, is_rotated: bool = False, rot_info: np.ndarray = None) -> List:
+def save_tracking(*, folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray = None, is_rotated: bool = False, rot_info: np.ndarray = None, is_transformed: bool = False) -> List:
     """Given tracking results. Will save as text files."""
     new_path = create_folder(folder_path, "results")
     num_beats = len(tracker_0_all)
     saved_paths = []
     for kk in range(0, num_beats):
-        if is_rotated:
+        if is_transformed:
+            file_path = new_path.joinpath("transformed_beat%i_row.txt" % (kk)).resolve()
+        elif is_rotated:
             file_path = new_path.joinpath("rotated_beat%i_row.txt" % (kk)).resolve()
         else:
             file_path = new_path.joinpath("beat%i_row.txt" % (kk)).resolve()
         saved_paths.append(file_path)
         np.savetxt(str(file_path), tracker_1_all[kk])
-        if is_rotated:
+        if is_transformed:
+            file_path = new_path.joinpath("transformed_beat%i_col.txt" % (kk)).resolve()
+        elif is_rotated:
             file_path = new_path.joinpath("rotated_beat%i_col.txt" % (kk)).resolve()
         else:
             file_path = new_path.joinpath("beat%i_col.txt" % (kk)).resolve()
@@ -567,13 +571,28 @@ def run_rotation_visualization(folder_path: Path, col_max: Union[int, float] = 1
     return png_path_list, gif_path
 
 
-# def transform_coordinate_system(
-#     mask: np.ndarray,
-#     microns_per_pixel_row: Union[int, float],
-#     microns_per_pixel_col: Union[int, float],
-#     tracker_row_all: np.ndarray,
-#     tracker_col_all: np.ndarray
-# ) -> np.ndarray:
-#     """Given information on."""
+def scale_array_in_list(tracker_list: List, new_origin: Union[int, float], scale_mult: Union[int, float]) -> List:
+    """Given a list of arrays of coordinates, new origin (in pixel coordinates), and new scale. Will subtract the origin and then multiply by the scale."""
+    updated_tracker_list = []
+    num_beats = len(tracker_list)
+    for kk in range(0, num_beats):
+        val_array = tracker_list[kk]
+        new_val_array = (val_array - new_origin) * scale_mult
+        updated_tracker_list.append(new_val_array)
+    return updated_tracker_list
 
-#     return transformed_tracker_row_all, transformed_tracker_col_all
+
+def scale_and_center_coordinates(
+    folder_path: Path,
+    pixel_origin_row: Union[int, float],
+    pixel_origin_col: Union[int, float],
+    microns_per_pixel_row: Union[int, float],
+    microns_per_pixel_col: Union[int, float],
+    use_rotated: bool = False
+) -> List:
+    """Given information to transform the coordinate system (translation only). """
+    tracker_row_all, tracker_col_all, _ = load_tracking_results(folder_path, use_rotated)
+    updated_tracker_row_all = scale_array_in_list(tracker_row_all, pixel_origin_row, microns_per_pixel_row)
+    updated_tracker_col_all = scale_array_in_list(tracker_col_all, pixel_origin_col, microns_per_pixel_col)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=updated_tracker_col_all, tracker_1_all=updated_tracker_row_all, is_transformed=True)
+    return saved_paths

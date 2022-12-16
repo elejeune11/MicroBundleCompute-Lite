@@ -643,3 +643,31 @@ def test_run_rotation_visualization():
     for pa in png_path_list:
         assert pa.is_file()
     assert gif_path.is_file()
+
+
+def test_scale_scale_array_in_list():
+    arr1 = np.random.random((20, 20))
+    arr2 = np.random.random((20, 20))
+    arr3 = np.random.random((20, 20))
+    tracker_list = [arr1, arr2, arr3]
+    new_origin = 10.0
+    scale_mult = 10
+    updated_tracker_list = ia.scale_array_in_list(tracker_list, new_origin, scale_mult)
+    assert np.allclose(scale_mult * (arr1 - new_origin), updated_tracker_list[0])
+    assert np.allclose(scale_mult * (arr2 - new_origin), updated_tracker_list[1])
+    assert np.allclose(scale_mult * (arr3 - new_origin), updated_tracker_list[2])
+
+
+def test_scale_and_center_coordinates():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    pixel_origin_row = 100
+    pixel_origin_col = 150
+    microns_per_pixel_row = 0.25
+    microns_per_pixel_col = 0.25
+    saved_paths = ia.scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col)
+    for pa in saved_paths:
+        assert pa.is_file()
+    input_mask = True
+    _ = ia.run_rotation(folder_path, input_mask)
+    saved_paths = ia.scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col, True)
