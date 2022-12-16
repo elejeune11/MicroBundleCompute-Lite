@@ -229,8 +229,9 @@ def load_tracking_results(folder_path: Path, is_rotated: bool = False) -> List:
     if res_folder_path.exists() is False:
         raise FileNotFoundError("tracking results are not present -- tracking must be run before visualization")
     rev_file_0 = res_folder_path.joinpath("rotated_beat0_col.txt").resolve()
-    if rev_file_0.exists() is False:
-        raise FileNotFoundError("rotated tracking results are not present -- rotated tracking must be run before rotated visualization")
+    if is_rotated:
+        if rev_file_0.is_file() is False:
+            raise FileNotFoundError("rotated tracking results are not present -- rotated tracking must be run before rotated visualization")
     num_files = len(glob.glob(str(res_folder_path) + "/beat*.txt"))
     num_beats = int((num_files) / 2)
     tracker_row_all = []

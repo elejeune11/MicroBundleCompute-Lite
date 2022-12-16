@@ -327,7 +327,7 @@ def test_load_tracking_results():
     assert error.typename == "FileNotFoundError"
     folder_path_1 = folder_path.joinpath("fake_example_1").resolve()
     with pytest.raises(FileNotFoundError) as error:
-        ia.load_tracking_results(folder_path_1)
+        ia.load_tracking_results(folder_path_1, True)
     assert error.typename == "FileNotFoundError"
     # NOTE: need to add reverse tracking example
 
