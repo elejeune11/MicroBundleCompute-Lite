@@ -599,7 +599,7 @@ def test_get_rotation_info():
     assert np.isclose(center_col_known, center_col_found)
     assert np.allclose(vec_known, vec_found)
     # check case where only mask is provided
-    file_path = tissue_mask_path("real_example_super_short")
+    file_path = tissue_mask_path("real_example_short_rotated")
     mask = ia.read_txt_as_mask(file_path)
     center_row_known, center_col_known, vec_known = ia.axis_from_mask(mask)
     (rot_mat_known, ang_known) = ia.rot_vec_to_rot_mat_and_angle(vec_known)
@@ -619,7 +619,7 @@ def test_get_rotation_info():
 
 
 def test_run_rotation():
-    folder_path = example_path("real_example_short")
+    folder_path = example_path("real_example_short_rotated")
     _ = ia.run_tracking(folder_path)
     input_mask = True
     saved_paths = ia.run_rotation(folder_path, input_mask)
@@ -635,7 +635,7 @@ def test_run_rotation():
 
 
 def test_run_rotation_visualization():
-    folder_path = example_path("real_example_short")
+    folder_path = example_path("real_example_short_rotated")
     _ = ia.run_tracking(folder_path)
     input_mask = True
     _ = ia.run_rotation(folder_path, input_mask)
