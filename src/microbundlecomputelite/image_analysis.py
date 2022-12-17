@@ -354,6 +354,44 @@ def interpolate_points(
     return row_col_sample_vals
 
 
+def interpolate_pos_from_tracking_arrays(
+    tracker_row: np.ndarray,
+    tracker_col: np.ndarray,
+    row_col_sample: np.ndarray,
+) -> np.ndarray:
+    """Given tracking results for one beat and sample locations.
+    Will return interpolated tracking results at the sample points."""
+    num_frames = tracker_row.shape[1]
+    num_sample_pts = row_col_sample.shape[0]
+    row_sample = np.zeros((num_sample_pts, num_frames))
+    col_sample = np.zeros((num_sample_pts, num_frames))
+    row_sample[:, 0] = row_col_sample[:, 0]
+    col_sample[:, 0] = row_col_sample[:, 1]
+    row_col_pos = np.hstack((tracker_row[:, 0].reshape((-1, 1)), tracker_col[:, 0].reshape((-1, 1))))
+    for kk in range(1, num_frames):
+        row_col_vals = np.hstack((tracker_row[:, kk].reshape((-1, 1)) - tracker_row[:, 0].reshape((-1, 1)), tracker_col[:, kk].reshape((-1, 1)) - tracker_col[:, 0].reshape((-1, 1))))
+        row_col_sample_vals = interpolate_points(row_col_pos, row_col_vals, row_col_sample)
+        row_sample[:, kk] = row_col_sample_vals[:, 0] + row_col_sample[:, 0]
+        col_sample[:, kk] = row_col_sample_vals[:, 1] + row_col_sample[:, 1]
+    return row_sample, col_sample
+
+
+def interpolate_pos_from_tracking_lists(
+    tracker_row_all: List,
+    tracker_col_all: List,
+    row_col_sample: np.ndarray,
+) -> List:
+    """Given tracking results in a list and interpolation sample points. Will interpolate for all frames."""
+    row_sample_list = []
+    col_sample_list = []
+    num_beats = len(tracker_row_all)
+    for kk in range(0, num_beats):
+        row_sample, col_sample = interpolate_pos_from_tracking_arrays(tracker_row_all[kk], tracker_col_all[kk], row_col_sample)
+        row_sample_list.append(row_sample)
+        col_sample_list.append(col_sample)
+    return row_sample_list, col_sample_list
+
+
 def compute_distance(x1: Union[int, float], x2: Union[int, float], y1: Union[int, float], y2: Union[int, float]) -> Union[int, float]:
     """Given two 2D points. Will return the distance between them."""
     dist = ((x1 - x2) ** 2.0 + (y1 - y2) ** 2.0) ** 0.5
@@ -596,3 +634,10 @@ def scale_and_center_coordinates(
     updated_tracker_col_all = scale_array_in_list(tracker_col_all, pixel_origin_col, microns_per_pixel_col)
     saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=updated_tracker_col_all, tracker_1_all=updated_tracker_row_all, is_transformed=True)
     return saved_paths
+
+
+# def run_interpolate_pos():
+
+
+
+# def visualize_interpolate_pos():

@@ -671,3 +671,34 @@ def test_scale_and_center_coordinates():
     input_mask = True
     _ = ia.run_rotation(folder_path, input_mask)
     saved_paths = ia.scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col, True)
+
+
+def test_interpolate_pos_from_tracking_arrays_and_interpolate_pos_from_tracking_lists():
+    vec1 = np.random.random(100).reshape((-1, 1))
+    vec2 = np.random.random(100).reshape((-1, 1))
+    vec1b = vec1 + 0.05 * vec1 * vec2
+    vec2b = vec2 + 0.05 * vec1 * vec2
+    vec1c = vec1 + 0.1 * vec1 * vec2
+    vec2c = vec2 + 0.1 * vec1 * vec2
+    vec1_arr = np.hstack((vec1, vec1b, vec1c))
+    vec2_arr = np.hstack((vec2, vec2b, vec2c))
+    vec1_sample = np.random.random(10).reshape((-1, 1))
+    vec2_sample = np.random.random(10).reshape((-1, 1))
+    vec1b_sample = vec1_sample + 0.05 * vec1_sample * vec2_sample
+    vec2b_sample = vec2_sample + 0.05 * vec1_sample * vec2_sample
+    vec1c_sample = vec1_sample + 0.1 * vec1_sample * vec2_sample
+    vec2c_sample = vec2_sample + 0.1 * vec1_sample * vec2_sample
+    vec1_arr_sample = np.hstack((vec1_sample, vec1b_sample, vec1c_sample))
+    vec2_arr_sample = np.hstack((vec2_sample, vec2b_sample, vec2c_sample))
+    row_col_sample = np.hstack((vec1_sample, vec2_sample))
+    row_sample, col_sample = ia.interpolate_pos_from_tracking_arrays(vec1_arr, vec2_arr, row_col_sample)
+    assert np.allclose(row_sample, vec1_arr_sample, atol=0.1)
+    assert np.allclose(col_sample, vec2_arr_sample, atol=0.1)
+    tracker_row_all = [vec1_arr, vec1_arr, vec1_arr]
+    tracker_col_all = [vec2_arr, vec2_arr, vec2_arr]
+    row_sample_list, col_sample_list = ia.interpolate_pos_from_tracking_lists(tracker_row_all, tracker_col_all, row_col_sample)
+    assert len(row_sample_list) == 3
+    assert len(col_sample_list) == 3
+
+
+
