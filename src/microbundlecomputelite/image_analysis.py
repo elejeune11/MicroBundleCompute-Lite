@@ -174,28 +174,47 @@ def split_tracking(tracker_0: np.ndarray, tracker_1: np.ndarray, info: np.ndarra
     return tracker_0_all, tracker_1_all
 
 
-def save_tracking(*, folder_path: Path, tracker_0_all: List, tracker_1_all: List, info: np.ndarray = None, is_rotated: bool = False, rot_info: np.ndarray = None, is_transformed: bool = False) -> List:
+def save_tracking(*, folder_path: Path, tracker_row_all: List, tracker_col_all: List, info: np.ndarray = None, is_rotated: bool = False, rot_info: np.ndarray = None, is_translated: bool = False, fname: str = None) -> List:
     """Given tracking results. Will save as text files."""
     new_path = create_folder(folder_path, "results")
-    num_beats = len(tracker_0_all)
+    num_beats = len(tracker_row_all)
     saved_paths = []
     for kk in range(0, num_beats):
-        if is_transformed:
-            file_path = new_path.joinpath("transformed_beat%i_row.txt" % (kk)).resolve()
+        if fname is not None:
+            file_path = new_path.joinpath(fname + "_beat%i_row.txt" % (kk)).resolve()
+            saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_row_all[kk])
+            file_path = new_path.joinpath(fname + "_beat%i_col.txt" % (kk)).resolve()
+            np.savetxt(str(file_path), tracker_col_all[kk])
+            saved_paths.append(file_path)
+        elif is_translated and is_rotated:
+            file_path = new_path.joinpath("rotated_translated_beat%i_row.txt" % (kk)).resolve()
+            saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_row_all[kk])
+            file_path = new_path.joinpath("rotated_translated_beat%i_col.txt" % (kk)).resolve()
+            np.savetxt(str(file_path), tracker_col_all[kk])
+            saved_paths.append(file_path)
+        elif is_translated:
+            file_path = new_path.joinpath("translated_beat%i_row.txt" % (kk)).resolve()
+            saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_row_all[kk])
+            file_path = new_path.joinpath("translated_beat%i_col.txt" % (kk)).resolve()
+            np.savetxt(str(file_path), tracker_col_all[kk])
+            saved_paths.append(file_path)
         elif is_rotated:
             file_path = new_path.joinpath("rotated_beat%i_row.txt" % (kk)).resolve()
+            saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_row_all[kk])
+            file_path = new_path.joinpath("rotated_beat%i_col.txt" % (kk)).resolve()
+            np.savetxt(str(file_path), tracker_col_all[kk])
+            saved_paths.append(file_path)
         else:
             file_path = new_path.joinpath("beat%i_row.txt" % (kk)).resolve()
-        saved_paths.append(file_path)
-        np.savetxt(str(file_path), tracker_1_all[kk])
-        if is_transformed:
-            file_path = new_path.joinpath("transformed_beat%i_col.txt" % (kk)).resolve()
-        elif is_rotated:
-            file_path = new_path.joinpath("rotated_beat%i_col.txt" % (kk)).resolve()
-        else:
+            saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath("beat%i_col.txt" % (kk)).resolve()
-        np.savetxt(str(file_path), tracker_0_all[kk])
-        saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
+            saved_paths.append(file_path)
     if info is not None:
         file_path = new_path.joinpath("info.txt").resolve()
         np.savetxt(str(file_path), info)
@@ -223,11 +242,11 @@ def run_tracking(folder_path: Path) -> List:
     # split tracking results
     tracker_0_all, tracker_1_all = split_tracking(tracker_0, tracker_1, info)
     # save tracking results
-    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=tracker_0_all, tracker_row_all=tracker_1_all, info=info)
     return saved_paths
 
 
-def load_tracking_results(folder_path: Path, is_rotated: bool = False) -> List:
+def load_tracking_results(*, folder_path: Path, is_rotated: bool = False, is_translated: bool = False, fname: str = None) -> List:
     """Given the folder path. Will load tracking results. If there are none, will return an error."""
     res_folder_path = folder_path.joinpath("results").resolve()
     if res_folder_path.exists() is False:
@@ -241,7 +260,16 @@ def load_tracking_results(folder_path: Path, is_rotated: bool = False) -> List:
     tracker_row_all = []
     tracker_col_all = []
     for kk in range(0, num_beats):
-        if is_rotated:
+        if fname is not None:
+            tracker_row = np.loadtxt(str(res_folder_path) + "/" + fname + "_beat%i_row.txt" % (kk))
+            tracker_col = np.loadtxt(str(res_folder_path) + "/" + fname + "_beat%i_col.txt" % (kk))
+        elif is_rotated and is_translated:
+            tracker_row = np.loadtxt(str(res_folder_path) + "/rotated_translated_beat%i_row.txt" % (kk))
+            tracker_col = np.loadtxt(str(res_folder_path) + "/rotated_translated_beat%i_col.txt" % (kk))
+        elif is_translated:
+            tracker_row = np.loadtxt(str(res_folder_path) + "/translated_beat%i_row.txt" % (kk))
+            tracker_col = np.loadtxt(str(res_folder_path) + "/translated_beat%i_col.txt" % (kk))
+        elif is_rotated:
             tracker_row = np.loadtxt(str(res_folder_path) + "/rotated_beat%i_row.txt" % (kk))
             tracker_col = np.loadtxt(str(res_folder_path) + "/rotated_beat%i_col.txt" % (kk))
         else:
@@ -251,11 +279,31 @@ def load_tracking_results(folder_path: Path, is_rotated: bool = False) -> List:
         tracker_col_all.append(tracker_col)
     info = np.loadtxt(str(res_folder_path) + "/info.txt")
     info_reshape = np.reshape(info, (-1, 3))
-    if is_rotated is False:
-        return tracker_row_all, tracker_col_all, (info_reshape)
-    else:
+    if is_rotated:
         rot_info = np.loadtxt(str(res_folder_path) + "/rot_info.txt")
-        return tracker_row_all, tracker_col_all, (info_reshape, rot_info)
+    else:
+        rot_info = None
+    return tracker_row_all, tracker_col_all, info_reshape, rot_info
+
+
+def get_title_fname(kk: int, beat: int, is_rotated: bool = False, include_interp: bool = False) -> str:
+    if is_rotated and include_interp:
+        ti = "rotated frame %i, beat %i, with interpolation" % (kk, beat)
+        fn = "rotated_%04d_disp_with_interp.png" % (kk)
+        fn_gif = "rotated_abs_disp_with_interp.gif"
+    elif is_rotated:
+        ti = "rotated frame %i, beat %i" % (kk, beat)
+        fn = "rotated_%04d_disp.png" % (kk)
+        fn_gif = "rotated_abs_disp.gif"
+    elif include_interp:
+        ti = "frame %i, beat %i, with interpolation" % (kk, beat)
+        fn = "%04d_disp_with_interp.png" % (kk)
+        fn_gif = "abs_disp_with_interp.gif"
+    else:
+        ti = "frame %i, beat %i" % (kk, beat)
+        fn = "%04d_disp.png" % (kk)
+        fn_gif = "abs_disp.gif"
+    return ti, fn, fn_gif
 
 
 def create_pngs(
@@ -266,7 +314,11 @@ def create_pngs(
     info: np.ndarray,
     col_max: Union[float, int],
     col_map: object,
-    is_rotated: bool = False
+    *,
+    is_rotated: bool = False,
+    include_interp: bool = False,
+    interp_tracker_row_all: List = None,
+    interp_tracker_col_all: List = None
 ) -> List:
     """Given tracking results. Will create png version of the visualizations."""
     vis_folder_path = create_folder(folder_path, "visualizations")
@@ -277,40 +329,39 @@ def create_pngs(
         tracker_row = tracker_row_all[beat]
         tracker_col = tracker_col_all[beat]
         _, disp_all = compute_abs_position_timeseries(tracker_row, tracker_col)
+        if include_interp:
+            interp_tracker_row = interp_tracker_row_all[beat]
+            interp_tracker_col = interp_tracker_col_all[beat]
+            _, interp_disp_all = compute_abs_position_timeseries(interp_tracker_row, interp_tracker_col)
         start_idx = int(info[beat, 1])
         end_idx = int(info[beat, 2])
         for kk in range(start_idx, end_idx):
+            ti, fn, _ = get_title_fname(kk, beat, is_rotated, include_interp)
             plt.figure()
             plt.imshow(tiff_list[kk], cmap=plt.cm.gray)
             jj = kk - start_idx
             plt.scatter(tracker_col[:, jj], tracker_row[:, jj], c=disp_all[:, jj], s=10, cmap=col_map, vmin=0, vmax=col_max)
-            if is_rotated:
-                plt.title("rotated frame %i, beat %i" % (kk, beat))
-            else:
-                plt.title("frame %i, beat %i" % (kk, beat))
+            if include_interp:
+                plt.scatter(interp_tracker_col[:, jj], interp_tracker_row[:, jj], c=interp_disp_all[:, jj], s=7, cmap=col_map, vmin=0, vmax=col_max, linewidths=1, edgecolors=(0, 0, 0))
+            plt.title(ti)
             cbar = plt.colorbar()
             cbar.ax.get_yaxis().labelpad = 15
             cbar.set_label("absolute displacement (pixels)", rotation=270)
             plt.axis("off")
-            if is_rotated:
-                path = pngs_folder_path.joinpath("rotated_%04d_disp.png" % (kk)).resolve()
-            else:
-                path = pngs_folder_path.joinpath("%04d_disp.png" % (kk)).resolve()
+            path = pngs_folder_path.joinpath(fn).resolve()
             plt.savefig(str(path))
             plt.close()
             path_list.append(path)
     return path_list
 
 
-def create_gif(folder_path: Path, png_path_list: List, is_rotated: bool = False) -> Path:
+def create_gif(folder_path: Path, png_path_list: List, is_rotated: bool = False, include_interp: bool = False) -> Path:
     """Given the pngs path list. Will create a gif."""
     img_list = []
     for pa in png_path_list:
         img_list.append(imageio.imread(pa))
-    if is_rotated:
-        gif_path = folder_path.joinpath("visualizations").resolve().joinpath("rotated_abs_disp.gif").resolve()
-    else:
-        gif_path = folder_path.joinpath("visualizations").resolve().joinpath("abs_disp.gif").resolve()
+    _, _, fn_gif = get_title_fname(0, 0, is_rotated, include_interp)
+    gif_path = folder_path.joinpath("visualizations").resolve().joinpath(fn_gif).resolve()
     imageio.mimsave(str(gif_path), img_list)
     return gif_path
 
@@ -330,7 +381,7 @@ def run_visualization(folder_path: Path, col_max: Union[int, float] = 10, col_ma
     name_list_path = image_folder_to_path_list(movie_folder_path)
     tiff_list = read_all_tiff(name_list_path)
     # read tracking results
-    tracker_row_all, tracker_col_all, (info) = load_tracking_results(folder_path)
+    tracker_row_all, tracker_col_all, info, _ = load_tracking_results(folder_path=folder_path)
     # create pngs
     png_path_list = create_pngs(folder_path, tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map)
     # create gif
@@ -578,13 +629,13 @@ def run_rotation(
     else:
         (center_row, center_col, rot_mat, _, vec) = get_rotation_info(center_row_input=center_row_input, center_col_input=center_col_input, vec_input=vec_input)
     # read tracking results
-    tracker_row_all, tracker_col_all, _ = load_tracking_results(folder_path, False)
+    tracker_row_all, tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path)
     # perform rotation
     rot_tracker_row_all, rot_tracker_col_all = rotate_pts_all(tracker_row_all, tracker_col_all, rot_mat, center_row, center_col)
     # save rotation info
     rot_info = np.asarray([[center_row, center_col], [vec[0], vec[1]]])
     # save rotation
-    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=rot_tracker_col_all, tracker_1_all=rot_tracker_row_all, is_rotated=True, rot_info=rot_info)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=rot_tracker_col_all, tracker_row_all=rot_tracker_row_all, is_rotated=True, rot_info=rot_info)
     return saved_paths
 
 
@@ -595,7 +646,7 @@ def run_rotation_visualization(folder_path: Path, col_max: Union[int, float] = 1
     name_list_path = image_folder_to_path_list(movie_folder_path)
     tiff_list = read_all_tiff(name_list_path)
     # read rotated tracking results
-    tracker_row_all, tracker_col_all, (info, rot_info) = load_tracking_results(folder_path, True)
+    tracker_row_all, tracker_col_all, info, rot_info = load_tracking_results(folder_path=folder_path, is_rotated=True)
     # rotate tiffs
     center_row = rot_info[0, 0]
     center_col = rot_info[0, 1]
@@ -603,7 +654,7 @@ def run_rotation_visualization(folder_path: Path, col_max: Union[int, float] = 1
     (_, ang) = rot_vec_to_rot_mat_and_angle(vec)
     rot_tiff_list = rotate_imgs_all(tiff_list, ang, center_row, center_col)
     # create pngs
-    png_path_list = create_pngs(folder_path, rot_tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map, True)
+    png_path_list = create_pngs(folder_path, rot_tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map, is_rotated=True)
     # create gif
     gif_path = create_gif(folder_path, png_path_list, True)
     return png_path_list, gif_path
@@ -620,7 +671,7 @@ def scale_array_in_list(tracker_list: List, new_origin: Union[int, float], scale
     return updated_tracker_list
 
 
-def scale_and_center_coordinates(
+def run_scale_and_center_coordinates(
     folder_path: Path,
     pixel_origin_row: Union[int, float],
     pixel_origin_col: Union[int, float],
@@ -629,15 +680,55 @@ def scale_and_center_coordinates(
     use_rotated: bool = False
 ) -> List:
     """Given information to transform the coordinate system (translation only). """
-    tracker_row_all, tracker_col_all, _ = load_tracking_results(folder_path, use_rotated)
+    tracker_row_all, tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path, is_rotated=use_rotated)
     updated_tracker_row_all = scale_array_in_list(tracker_row_all, pixel_origin_row, microns_per_pixel_row)
     updated_tracker_col_all = scale_array_in_list(tracker_col_all, pixel_origin_col, microns_per_pixel_col)
-    saved_paths = save_tracking(folder_path=folder_path, tracker_0_all=updated_tracker_col_all, tracker_1_all=updated_tracker_row_all, is_transformed=True)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=updated_tracker_col_all, tracker_row_all=updated_tracker_row_all, is_translated=True, is_rotated=use_rotated)
     return saved_paths
 
 
-# def run_interpolate_pos():
+def run_interpolate(
+    folder_path: Path,
+    row_col_sample: np.ndarray,
+    interpolation_fname: str = "interpolation",
+    is_rotated: bool = False,
+    is_translated: bool = False
+) -> List:
+    """Given a folder path, information, and sample points. Will compute and save interpolation at the sample points."""
+    # load tracking results
+    tracker_row_all, tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path, is_rotated=is_rotated, is_translated=is_translated)
+    # perform interpolation of tracking results
+    row_sample_list, col_sample_list = interpolate_pos_from_tracking_lists(tracker_row_all, tracker_col_all, row_col_sample)
+    # save interpolated results
+    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=col_sample_list, tracker_row_all=row_sample_list, fname=interpolation_fname)
+    return saved_paths
 
 
-
-# def visualize_interpolate_pos():
+def visualize_interpolate(
+    folder_path: Path,
+    *,
+    is_rotated: bool = False,
+    is_translated: bool = False,
+    interpolation_fname: str = "interpolation",
+    col_max: Union[int, float] = 10,
+    col_map: object = plt.cm.viridis
+) -> List:
+    """Given folder path and plotting information. Will run and save visualization."""
+    # read image files and tracking results
+    movie_folder_path = folder_path.joinpath("movie").resolve()
+    name_list_path = image_folder_to_path_list(movie_folder_path)
+    tiff_list = read_all_tiff(name_list_path)
+    tracker_row_all, tracker_col_all, info, rot_info = load_tracking_results(folder_path=folder_path, is_rotated=is_rotated, is_translated=is_translated)
+    if is_rotated:
+        center_row = rot_info[0, 0]
+        center_col = rot_info[0, 1]
+        vec = np.asarray([rot_info[1, 0], rot_info[1, 1]])
+        (_, ang) = rot_vec_to_rot_mat_and_angle(vec)
+        tiff_list = rotate_imgs_all(tiff_list, ang, center_row, center_col)
+    # read interpolated results
+    interp_tracker_row_all, interp_tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path, is_rotated=is_rotated, is_translated=is_translated, fname=interpolation_fname)
+    # create pngs
+    png_path_list = create_pngs(folder_path, tiff_list, tracker_row_all, tracker_col_all, info, col_max, col_map, is_rotated=is_rotated, include_interp=True, interp_tracker_row_all=interp_tracker_row_all, interp_tracker_col_all=interp_tracker_col_all)
+    # create gif
+    gif_path = create_gif(folder_path, png_path_list, is_rotated, True)
+    return png_path_list, gif_path

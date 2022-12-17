@@ -49,7 +49,7 @@ def test_read_tiff():
 
 
 def test_create_folder_guaranteed_conditions():
-    folder_path = example_path("real_example_super_short")
+    folder_path = example_path("io_testing_examples")
     new_folder_name = "test_create_folder_%i" % (np.random.random() * 1000000)
     new_folder = ia.create_folder(folder_path, new_folder_name)
     assert new_folder.is_dir()
@@ -293,11 +293,11 @@ def test_save_tracking():
     rot_info = np.asarray(rot_info)
     tracker_0_all, tracker_1_all = ia.split_tracking(tracker_0, tracker_1, info)
     folder_path = example_path("real_example_super_short")
-    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info)
+    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_col_all=tracker_0_all, tracker_row_all=tracker_1_all, info=info)
     for pa in saved_paths:
         assert pa.is_file()
     assert len(saved_paths) == info.shape[0] * 2 + 1
-    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_0_all=tracker_0_all, tracker_1_all=tracker_1_all, info=info, is_rotated=True, rot_info=rot_info)
+    saved_paths = ia.save_tracking(folder_path=folder_path, tracker_col_all=tracker_0_all, tracker_row_all=tracker_1_all, info=info, is_rotated=True, rot_info=rot_info)
     for pa in saved_paths:
         assert pa.is_file()
     assert len(saved_paths) == info.shape[0] * 2 + 1
@@ -314,28 +314,60 @@ def test_run_tracking():
 def test_load_tracking_results():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
-    tracker_row_all, tracker_col_all, info = ia.load_tracking_results(folder_path)
+    tracker_row_all, tracker_col_all, info, rot_info = ia.load_tracking_results(folder_path=folder_path)
     assert len(tracker_row_all) == 1
     assert len(tracker_row_all) == 1
     assert len(tracker_col_all) == 1
     assert len(tracker_col_all) == 1
     assert info.shape[1] == 3
+    assert rot_info is None
     folder_path = example_path("io_testing_examples")
     folder_path_0 = folder_path.joinpath("fake_example_0").resolve()
     with pytest.raises(FileNotFoundError) as error:
-        ia.load_tracking_results(folder_path_0)
+        ia.load_tracking_results(folder_path=folder_path_0)
     assert error.typename == "FileNotFoundError"
     folder_path_1 = folder_path.joinpath("fake_example_1").resolve()
     with pytest.raises(FileNotFoundError) as error:
-        ia.load_tracking_results(folder_path_1, True)
+        ia.load_tracking_results(folder_path=folder_path_1, is_rotated=True)
     assert error.typename == "FileNotFoundError"
-    # NOTE: need to add reverse tracking example
+    folder_path = example_path("real_example_short")
+    _ = ia.run_rotation(folder_path, True)
+    tracker_row_all, tracker_col_all, info, rot_info = ia.load_tracking_results(folder_path=folder_path, is_rotated=True)
+    assert len(tracker_row_all) == 1
+    assert len(tracker_row_all) == 1
+    assert len(tracker_col_all) == 1
+    assert len(tracker_col_all) == 1
+    assert info.shape[1] == 3
+    assert rot_info.shape == (2, 2)
+    _ = ia.run_scale_and_center_coordinates(folder_path, 100, 100, 0.5, 0.5)
+    tracker_row_all, tracker_col_all, info, rot_info = ia.load_tracking_results(folder_path=folder_path, is_translated=True)
+    assert len(tracker_row_all) == 1
+    assert len(tracker_row_all) == 1
+    assert len(tracker_col_all) == 1
+    assert len(tracker_col_all) == 1
+    assert info.shape[1] == 3
+    assert rot_info is None
+    _ = ia.run_scale_and_center_coordinates(folder_path, 100, 100, 0.5, 0.5, True)
+    tracker_row_all, tracker_col_all, info, rot_info = ia.load_tracking_results(folder_path=folder_path, is_translated=True, is_rotated=True)
+    assert len(tracker_row_all) == 1
+    assert len(tracker_row_all) == 1
+    assert len(tracker_col_all) == 1
+    assert len(tracker_col_all) == 1
+    assert info.shape[1] == 3
+    assert rot_info.shape == (2, 2)
+    tracker_row_all, tracker_col_all, info, rot_info = ia.load_tracking_results(folder_path=folder_path, is_translated=True, is_rotated=True, fname="rotated_translated")
+    assert len(tracker_row_all) == 1
+    assert len(tracker_row_all) == 1
+    assert len(tracker_col_all) == 1
+    assert len(tracker_col_all) == 1
+    assert info.shape[1] == 3
+    assert rot_info.shape == (2, 2)
 
 
 def test_create_pngs_gif():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
-    tracker_row_all, tracker_col_all, info = ia.load_tracking_results(folder_path)
+    tracker_row_all, tracker_col_all, info, _ = ia.load_tracking_results(folder_path=folder_path)
     mov_path = movie_path("real_example_short")
     name_list_path = ia.image_folder_to_path_list(mov_path)
     tiff_list = ia.read_all_tiff(name_list_path)
@@ -348,6 +380,27 @@ def test_create_pngs_gif():
     assert gif_path.is_file()
     # mp4_path = ia.create_mp4(folder_path, gif_path)
     # assert mp4_path.is_file()
+
+
+def test_get_title_fname():
+    kk = 1
+    beat = 1
+    ti, fn, fn_gif = ia.get_title_fname(kk, beat, True, True)
+    assert ti == "rotated frame %i, beat %i, with interpolation" % (kk, beat)
+    assert fn == "rotated_%04d_disp_with_interp.png" % (kk)
+    assert fn_gif == "rotated_abs_disp_with_interp.gif"
+    ti, fn, fn_gif = ia.get_title_fname(kk, beat, True, False)
+    assert ti == "rotated frame %i, beat %i" % (kk, beat)
+    assert fn == "rotated_%04d_disp.png" % (kk)
+    assert fn_gif == "rotated_abs_disp.gif"
+    ti, fn, fn_gif = ia.get_title_fname(kk, beat, False, True)
+    assert ti == "frame %i, beat %i, with interpolation" % (kk, beat)
+    assert fn == "%04d_disp_with_interp.png" % (kk)
+    assert fn_gif == "abs_disp_with_interp.gif"
+    ti, fn, fn_gif = ia.get_title_fname(kk, beat, False, False)
+    assert ti == "frame %i, beat %i" % (kk, beat)
+    assert fn == "%04d_disp.png" % (kk)
+    assert fn_gif == "abs_disp.gif"
 
 
 def test_run_visualization():
@@ -658,19 +711,19 @@ def test_scale_scale_array_in_list():
     assert np.allclose(scale_mult * (arr3 - new_origin), updated_tracker_list[2])
 
 
-def test_scale_and_center_coordinates():
+def test_run_scale_and_center_coordinates():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
     pixel_origin_row = 100
     pixel_origin_col = 150
     microns_per_pixel_row = 0.25
     microns_per_pixel_col = 0.25
-    saved_paths = ia.scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col)
+    saved_paths = ia.run_scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col)
     for pa in saved_paths:
         assert pa.is_file()
     input_mask = True
     _ = ia.run_rotation(folder_path, input_mask)
-    saved_paths = ia.scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col, True)
+    saved_paths = ia.run_scale_and_center_coordinates(folder_path, pixel_origin_row, pixel_origin_col, microns_per_pixel_row, microns_per_pixel_col, True)
 
 
 def test_interpolate_pos_from_tracking_arrays_and_interpolate_pos_from_tracking_lists():
@@ -701,4 +754,52 @@ def test_interpolate_pos_from_tracking_arrays_and_interpolate_pos_from_tracking_
     assert len(col_sample_list) == 3
 
 
+def test_run_interpolate():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    row_vec = np.linspace(215, 305, 12)
+    col_vec = np.linspace(120, 400, 30)
+    row_grid, col_grid = np.meshgrid(row_vec, col_vec)
+    row_sample = row_grid.reshape((-1, 1))
+    col_sample = col_grid.reshape((-1, 1))
+    row_col_sample = np.hstack((row_sample, col_sample))
+    saved_paths = ia.run_interpolate(folder_path, row_col_sample)
+    for pa in saved_paths:
+        assert pa.is_file()
 
+
+def test_visualize_interpolate():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    row_vec = np.linspace(215, 305, 12)
+    col_vec = np.linspace(120, 400, 30)
+    row_grid, col_grid = np.meshgrid(row_vec, col_vec)
+    row_sample = row_grid.reshape((-1, 1))
+    col_sample = col_grid.reshape((-1, 1))
+    row_col_sample = np.hstack((row_sample, col_sample))
+    saved_paths = ia.run_interpolate(folder_path, row_col_sample)
+    for pa in saved_paths:
+        assert pa.is_file()
+    png_path_list, gif_path = ia.visualize_interpolate(folder_path, col_max=3)
+    for pa in png_path_list:
+        assert pa.is_file()
+    assert gif_path.is_file()
+
+
+def test_visualize_interpolate_rotated():
+    folder_path = example_path("real_example_short_rotated")
+    _ = ia.run_tracking(folder_path)
+    _ = ia.run_rotation(folder_path, True)
+    row_vec = np.linspace(195, 195 + 90, 12)
+    col_vec = np.linspace(125, 400, 30)
+    row_grid, col_grid = np.meshgrid(row_vec, col_vec)
+    row_sample = row_grid.reshape((-1, 1))
+    col_sample = col_grid.reshape((-1, 1))
+    row_col_sample = np.hstack((row_sample, col_sample))
+    saved_paths = ia.run_interpolate(folder_path, row_col_sample, is_rotated=True)
+    for pa in saved_paths:
+        assert pa.is_file()
+    png_path_list, gif_path = ia.visualize_interpolate(folder_path, col_max=3, is_rotated=True)
+    for pa in png_path_list:
+        assert pa.is_file()
+    assert gif_path.is_file()
