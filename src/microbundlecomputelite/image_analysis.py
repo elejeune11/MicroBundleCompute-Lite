@@ -677,13 +677,15 @@ def run_scale_and_center_coordinates(
     pixel_origin_col: Union[int, float],
     microns_per_pixel_row: Union[int, float],
     microns_per_pixel_col: Union[int, float],
-    use_rotated: bool = False
+    use_rotated: bool = False,
+    fname: str = None,
+    new_fname: str = None
 ) -> List:
     """Given information to transform the coordinate system (translation only). """
-    tracker_row_all, tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path, is_rotated=use_rotated)
+    tracker_row_all, tracker_col_all, _, _ = load_tracking_results(folder_path=folder_path, is_rotated=use_rotated, fname=fname)
     updated_tracker_row_all = scale_array_in_list(tracker_row_all, pixel_origin_row, microns_per_pixel_row)
     updated_tracker_col_all = scale_array_in_list(tracker_col_all, pixel_origin_col, microns_per_pixel_col)
-    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=updated_tracker_col_all, tracker_row_all=updated_tracker_row_all, is_translated=True, is_rotated=use_rotated)
+    saved_paths = save_tracking(folder_path=folder_path, tracker_col_all=updated_tracker_col_all, tracker_row_all=updated_tracker_row_all, is_translated=True, is_rotated=use_rotated, fname=new_fname)
     return saved_paths
 
 
