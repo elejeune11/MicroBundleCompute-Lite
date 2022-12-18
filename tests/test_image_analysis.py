@@ -126,8 +126,9 @@ def test_adjust_feature_param_dicts():
     file_path = tissue_mask_path("real_example_super_short")
     mask = ia.read_txt_as_mask(file_path)
     feature_params_init, _ = ia.get_tracking_param_dicts()
+    qL_init = feature_params_init["qualityLevel"]
     feature_params_new = ia.adjust_feature_param_dicts(feature_params_init, img_uint8, mask)
-    assert feature_params_init["qualityLevel"] >= feature_params_new["qualityLevel"]
+    assert qL_init >= feature_params_new["qualityLevel"]
 
 
 def test_mask_to_track_points():
@@ -261,6 +262,15 @@ def test_compute_abs_position_timeseries():
 def test_get_time_segment_param_dicts():
     time_seg_params = ia.get_time_segment_param_dicts()
     assert time_seg_params["peakDist"] == 20
+
+
+def test_adjust_time_seg_params():
+    x = np.linspace(0, 500 * np.pi * 2.0, 500)
+    timeseries = np.sin(x / (np.pi * 2.0) / 20 - np.pi / 2.0)
+    time_seg_params = ia.get_time_segment_param_dicts()
+    pd_init = time_seg_params["peakDist"]
+    time_seg_params_new = ia.adjust_time_seg_params(time_seg_params, timeseries)
+    assert time_seg_params_new["peakDist"] > pd_init
 
 
 def test_compute_valleys():

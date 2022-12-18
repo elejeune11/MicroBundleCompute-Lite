@@ -165,9 +165,21 @@ def get_time_segment_param_dicts() -> dict:
     return time_seg_params
 
 
+def adjust_time_seg_params(time_seg_params: dict, timeseries: np.ndarray) -> dict:
+    timeseries_offset = timeseries - np.mean(timeseries)
+    signs = np.sign(timeseries_offset)
+    diff = np.diff(signs)
+    indices_of_zero_crossing = np.where(diff)[0]
+    total_points = np.diff(indices_of_zero_crossing)
+    period = np.mean(total_points) * 2.0
+    time_seg_params["peakDist"] = period * 0.75
+    return time_seg_params
+
+
 def compute_valleys(timeseries: np.ndarray) -> np.ndarray:
     """Given a timeseries. Will compute peaks and valleys."""
     time_seg_params = get_time_segment_param_dicts()
+    time_seg_params = adjust_time_seg_params(time_seg_params, timeseries)
     peaks, _ = find_peaks(timeseries, distance=time_seg_params["peakDist"])
     valleys = []
     for kk in range(0, len(peaks) - 1):
