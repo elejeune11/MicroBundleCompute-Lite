@@ -100,6 +100,22 @@ def mask_to_track_points(img_uint8: np.ndarray, mask: np.ndarray, feature_params
     return track_points_0
 
 
+def adjust_feature_param_dicts(feature_params: dict, img_uint8: np.ndarray, mask: np.ndarray, min_coverage: Union[float, int] = 100) -> dict:
+    """Given feature parameters, an image, and a mask. Will automatically update the feature quality to ensure sufficient coverage.
+    (min_coverage refers to the number of pixels that should be attributed to 1 tracking point)"""
+    track_points_0 = mask_to_track_points(img_uint8, mask, feature_params)
+    coverage = np.sum(mask) / track_points_0.shape[0]
+    iter = 0
+    qualityLevel = feature_params["qualityLevel"]
+    while coverage > min_coverage and iter < 10:
+        qualityLevel = qualityLevel * 10 ** (np.log10(0.1) / 10)  # this value raised to 10 is 0.1, so it will lower quality by an order of magnitude in 10 iterations
+        feature_params["qualityLevel"] = qualityLevel
+        track_points_0 = mask_to_track_points(img_uint8, mask, feature_params)
+        coverage = np.sum(mask) / track_points_0.shape[0]
+        iter += 1
+    return feature_params
+
+
 def track_one_step(img_uint8_0: np.ndarray, img_uint8_1: np.ndarray, track_points_0: np.ndarray, lk_params: dict):
     """Given img_0, img_1, tracking points p0, and tracking parameters.
     Will return the tracking points new location. Note that for now standard deviation and error are ignored."""
@@ -112,6 +128,7 @@ def track_all_steps(img_list_uint8: List, mask: np.ndarray) -> np.ndarray:
     Note that the returned order of tracked points will match order_list."""
     feature_params, lk_params = get_tracking_param_dicts()
     img_0 = img_list_uint8[0]
+    feature_params = adjust_feature_param_dicts(feature_params, img_0, mask)
     track_points = mask_to_track_points(img_0, mask, feature_params)
     num_track_pts = track_points.shape[0]
     num_imgs = len(img_list_uint8)

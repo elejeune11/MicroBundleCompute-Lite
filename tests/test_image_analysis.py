@@ -118,6 +118,18 @@ def test_get_tracking_param_dicts():
     assert lk_params["criteria"][2] == 0.03
 
 
+def test_adjust_feature_param_dicts():
+    mov_path = movie_path("real_example_super_short")
+    img_path = mov_path.joinpath("ex1_0000.TIF").resolve()
+    img = ia.read_tiff(img_path)
+    img_uint8 = ia.uint16_to_uint8(img)
+    file_path = tissue_mask_path("real_example_super_short")
+    mask = ia.read_txt_as_mask(file_path)
+    feature_params_init, _ = ia.get_tracking_param_dicts()
+    feature_params_new = ia.adjust_feature_param_dicts(feature_params_init, img_uint8, mask)
+    assert feature_params_init["qualityLevel"] >= feature_params_new["qualityLevel"]
+
+
 def test_mask_to_track_points():
     mov_path = movie_path("real_example_super_short")
     img_path = mov_path.joinpath("ex1_0000.TIF").resolve()
