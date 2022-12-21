@@ -525,6 +525,19 @@ def test_box_to_center_points():
     assert np.isclose(center_col, 5.0)
 
 
+def test_mask_to_box():
+    mask = np.zeros((100, 100))
+    mask[25:75, 45:55] = 1
+    box = ia.mask_to_box(mask)
+    assert box.shape == (4, 2)
+    assert np.isclose(np.min(box[:, 0]), 25, atol=3)
+    assert np.isclose(np.max(box[:, 0]), 74, atol=3)
+    assert np.isclose(np.min(box[:, 1]), 45, atol=3)
+    assert np.isclose(np.max(box[:, 1]), 54, atol=3)
+    mask[39, 60] = 1
+    box = ia.mask_to_box(mask)
+
+
 def test_box_to_unit_vec():
     box = np.asarray([[0, 0], [0, 10], [5, 10], [5, 0]])
     vec = ia.box_to_unit_vec(box)

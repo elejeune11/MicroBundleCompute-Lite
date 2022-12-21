@@ -63,7 +63,7 @@ def uint16_to_uint8(img_16: np.ndarray) -> np.ndarray:
 
 def bool_to_uint8(arr_bool: np.ndarray) -> np.ndarray:
     """Given a boolean array. Will return a uint8 array."""
-    arr_uint8 = (1. * arr_bool).astype('uint8')
+    arr_uint8 = (1. * arr_bool).astype("uint8")
     return arr_uint8
 
 
@@ -514,8 +514,8 @@ def box_to_center_points(box: np.ndarray) -> float:
     return center_row, center_col
 
 
-def axis_from_mask(mask: np.ndarray) -> np.ndarray:
-    """Given a folder path. Will import the mask and determine it's long axis."""
+def mask_to_box(mask: np.ndarray) -> np.ndarray:
+    """Given a mask. Will return the minimum area bounding rectangle."""
     # insert borders to the mask
     border = 10
     mask_mod = insert_borders(mask, border)
@@ -525,6 +525,12 @@ def axis_from_mask(mask: np.ndarray) -> np.ndarray:
     # find minimum area bounding rectangle
     rect = cv2.minAreaRect(cnts)
     box = np.int0(cv2.boxPoints(rect))
+    return box
+
+
+def axis_from_mask(mask: np.ndarray) -> np.ndarray:
+    """Given a folder path. Will import the mask and determine it's long axis."""
+    box = mask_to_box(mask)
     vec = box_to_unit_vec(box)
     center_row, center_col = box_to_center_points(box)
     return center_row, center_col, vec
