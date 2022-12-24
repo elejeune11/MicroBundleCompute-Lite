@@ -342,7 +342,7 @@ def F_to_Ecc_all(sub_domain_F_rr_all: List, sub_domain_F_rc_all: List, sub_domai
     num_beats = len(sub_domain_F_rr_all)
     num_sub_domains = sub_domain_F_rr_all[0].shape[0]
     for kk in range(0, num_beats):
-        num_frames = sub_domain_F_rr_all[0].shape[1]
+        num_frames = sub_domain_F_rr_all[kk].shape[1]
         Ecc_arr = np.zeros((num_sub_domains, num_frames))
         for jj in range(0, num_sub_domains):
             for ii in range(0, num_frames):
@@ -361,6 +361,7 @@ def pngs_sub_domain_strain(
     sub_domain_row_all: List,
     sub_domain_col_all: List,
     sub_domain_Ecc_all: List,
+    sub_domain_side: Union[float, int],
     info: np.ndarray,
     col_min: Union[float, int] = -0.025,
     col_max: Union[float, int] = 0.025,
@@ -383,6 +384,12 @@ def pngs_sub_domain_strain(
             plt.imshow(tiff_list[kk], cmap=plt.cm.gray)
             jj = kk - start_idx
             plt.scatter(tracker_col[:, jj], tracker_row[:, jj], c=Ecc[:, jj], s=50, cmap=col_map, vmin=col_min, vmax=col_max)
+            # illustrate sub-domain borders
+            sds = sub_domain_side / 2.0
+            for ii in range(0, tracker_col.shape[0]):
+                corners_rr = [tracker_row[ii, jj] - sds, tracker_row[ii, jj] - sds, tracker_row[ii, jj] + sds, tracker_row[ii, jj] + sds, tracker_row[ii, jj] - sds]
+                corners_cc = [tracker_col[ii, jj] - sds, tracker_col[ii, jj] + sds, tracker_col[ii, jj] + sds, tracker_col[ii, jj] - sds, tracker_col[ii, jj] - sds]
+                plt.plot(corners_cc, corners_rr, "k-", linewidth=0.1)
             plt.title("frame %i, beat %i, Ecc" % (kk, beat))
             cbar = plt.colorbar()
             cbar.ax.get_yaxis().labelpad = 15
@@ -454,11 +461,19 @@ def visualize_sub_domain_strain(
     name_list_path = ia.image_folder_to_path_list(movie_folder_path)
     tiff_list = ia.read_all_tiff(name_list_path)
     # load the strain results
-    sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all, sub_domain_row_all, sub_domain_col_all, info, _ = load_sub_domain_strain(folder_path)
+    sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all, sub_domain_row_all, sub_domain_col_all, info, strain_info = load_sub_domain_strain(folder_path)
+    # rotate the background tiff to match the strain results
+    # strain_sub_domain_info = np.asarray([[num_tile_row, num_tile_col], [tile_dim_pix, tile_dim_pix], [center_row, center_col], [vec[0], vec[1]]])
+    center_row = strain_info[2, 0]
+    center_col = strain_info[2, 1]
+    vec = strain_info[3, :]
+    sub_domain_side = strain_info[1, 0]
+    (_, ang) = ia.rot_vec_to_rot_mat_and_angle(vec)
+    tiff_list = ia.rotate_imgs_all(tiff_list, ang, center_row, center_col)
     # convert the strain results to Ecc for plotting
     sub_domain_Ecc_all = F_to_Ecc_all(sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all)
     # create png visualizations
-    png_path_list = pngs_sub_domain_strain(folder_path, tiff_list, sub_domain_row_all, sub_domain_col_all, sub_domain_Ecc_all, info, col_min, col_max, col_map, fname)
+    png_path_list = pngs_sub_domain_strain(folder_path, tiff_list, sub_domain_row_all, sub_domain_col_all, sub_domain_Ecc_all, sub_domain_side, info, col_min, col_max, col_map, fname)
     # create gif
     gif_path = create_gif(folder_path, png_path_list)
     return png_path_list, gif_path
