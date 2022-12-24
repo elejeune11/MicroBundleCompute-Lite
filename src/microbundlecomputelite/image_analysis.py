@@ -214,36 +214,36 @@ def save_tracking(*, folder_path: Path, tracker_row_all: List, tracker_col_all: 
             saved_paths.append(file_path)
             np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath(fname + "_beat%i_col.txt" % (kk)).resolve()
-            np.savetxt(str(file_path), tracker_col_all[kk])
             saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
         elif is_translated and is_rotated:
             file_path = new_path.joinpath("rotated_translated_beat%i_row.txt" % (kk)).resolve()
             saved_paths.append(file_path)
             np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath("rotated_translated_beat%i_col.txt" % (kk)).resolve()
-            np.savetxt(str(file_path), tracker_col_all[kk])
             saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
         elif is_translated:
             file_path = new_path.joinpath("translated_beat%i_row.txt" % (kk)).resolve()
             saved_paths.append(file_path)
             np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath("translated_beat%i_col.txt" % (kk)).resolve()
-            np.savetxt(str(file_path), tracker_col_all[kk])
             saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
         elif is_rotated:
             file_path = new_path.joinpath("rotated_beat%i_row.txt" % (kk)).resolve()
             saved_paths.append(file_path)
             np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath("rotated_beat%i_col.txt" % (kk)).resolve()
-            np.savetxt(str(file_path), tracker_col_all[kk])
             saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
         else:
             file_path = new_path.joinpath("beat%i_row.txt" % (kk)).resolve()
             saved_paths.append(file_path)
             np.savetxt(str(file_path), tracker_row_all[kk])
             file_path = new_path.joinpath("beat%i_col.txt" % (kk)).resolve()
-            np.savetxt(str(file_path), tracker_col_all[kk])
             saved_paths.append(file_path)
+            np.savetxt(str(file_path), tracker_col_all[kk])
     if info is not None:
         file_path = new_path.joinpath("info.txt").resolve()
         np.savetxt(str(file_path), info)
@@ -316,6 +316,7 @@ def load_tracking_results(*, folder_path: Path, is_rotated: bool = False, is_tra
 
 
 def get_title_fname(kk: int, beat: int, is_rotated: bool = False, include_interp: bool = False) -> str:
+    """XX -- TODO: add in the option to include a custom title."""
     if is_rotated and include_interp:
         ti = "rotated frame %i, beat %i, with interpolation" % (kk, beat)
         fn = "rotated_%04d_disp_with_interp.png" % (kk)
@@ -520,7 +521,8 @@ def mask_to_box(mask: np.ndarray) -> np.ndarray:
     border = 10
     mask_mod = insert_borders(mask, border)
     # find contour
-    mask_thresh_blur = ndimage.gaussian_filter(mask_mod, 1)
+    mask_mod_one = (mask_mod > 0).astype(np.float64)
+    mask_thresh_blur = ndimage.gaussian_filter(mask_mod_one, 1)
     cnts = measure.find_contours(mask_thresh_blur, 0.75)[0].astype(np.int32)
     # find minimum area bounding rectangle
     rect = cv2.minAreaRect(cnts)
