@@ -806,16 +806,18 @@ def test_run_interpolate():
 def test_visualize_interpolate():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
-    row_vec = np.linspace(215, 305, 12)
+    input_mask = True
+    _ = ia.run_rotation(folder_path, input_mask)
+    row_vec = np.linspace(220, 310, 12)
     col_vec = np.linspace(120, 400, 30)
     row_grid, col_grid = np.meshgrid(row_vec, col_vec)
     row_sample = row_grid.reshape((-1, 1))
     col_sample = col_grid.reshape((-1, 1))
     row_col_sample = np.hstack((row_sample, col_sample))
-    saved_paths = ia.run_interpolate(folder_path, row_col_sample)
+    saved_paths = ia.run_interpolate(folder_path, row_col_sample, "interpolation", True)
     for pa in saved_paths:
         assert pa.is_file()
-    png_path_list, gif_path = ia.visualize_interpolate(folder_path, col_max=3)
+    png_path_list, gif_path = ia.visualize_interpolate(folder_path, col_max=3, is_rotated=True)
     for pa in png_path_list:
         assert pa.is_file()
     assert gif_path.is_file()
