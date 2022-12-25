@@ -355,6 +355,86 @@ def F_to_Ecc_all(sub_domain_F_rr_all: List, sub_domain_F_rc_all: List, sub_domai
     return sub_domain_Ecc_all
 
 
+def get_text_str(row: int, col: int) -> str:
+    """Given the row and the column of a location. Will return the row and column position string."""
+    test_str = "%s%i" % (chr(row + 65), col + 1)
+    return test_str
+
+
+def png_sub_domains_numbered(
+    folder_path: Path,
+    example_tiff: np.ndarray,
+    sub_domain_row: List,
+    sub_domain_col: List,
+    sub_domain_side: Union[float, int],
+    num_sd_row: int,
+    num_sd_col: int,
+    fname: str = "strain_",
+    col_map: object = plt.cm.viridis
+) -> List:
+    """Given information to visualize the sub-domains. Will plot the subdomains and label them.
+    Rows are labeled A, B, C, etc. -- columns are labeled 1, 2, 3, etc. """
+    vis_folder_path = ia.create_folder(folder_path, "visualizations")
+    pngs_folder_path = ia.create_folder(vis_folder_path, "strain_pngs")
+    img_path = pngs_folder_path.joinpath(fname + "sub_domain_key.png").resolve()
+    plt.figure()
+    plt.imshow(example_tiff, cmap=plt.cm.gray)
+    sds = sub_domain_side / 2.0
+    for cc in range(0, num_sd_col):
+        for rr in range(0, num_sd_row):
+            idx = rr * num_sd_col + cc
+            center_row = sub_domain_row[idx, 0]
+            center_col = sub_domain_col[idx, 0]
+            text_str = get_text_str(rr, cc)
+            plt.text(center_col, center_row, text_str, color=col_map(idx / (num_sd_col * num_sd_row)), horizontalalignment="center", verticalalignment="center")
+            corners_rr = [center_row - sds, center_row - sds, center_row + sds, center_row + sds, center_row - sds]
+            corners_cc = [center_col - sds, center_col + sds, center_col + sds, center_col - sds, center_col - sds]
+            plt.plot(corners_cc, corners_rr, "k-", linewidth=1)
+    plt.axis("off")
+    plt.savefig(str(img_path))
+    plt.close()
+    return img_path
+
+
+def png_sub_domain_strain_timeseries_all(
+    folder_path: Path,
+    sub_domain_strain_all: List,
+    num_sd_row: int,
+    num_sd_col: int,
+    col_map: object = plt.cm.viridis,
+    *,
+    fname: str = "strain_timeseries_Ecc",
+    xlabel: str = "frame",
+    ylabel: str = "strain Ecc"
+) -> List:
+    """Given strain timeseries. Will plot all timeseries on the same axis."""
+    vis_folder_path = ia.create_folder(folder_path, "visualizations")
+    pngs_folder_path = ia.create_folder(vis_folder_path, "strain_pngs")
+    num_beats = len(sub_domain_strain_all)
+    path_list = []
+    for kk in range(0, num_beats):
+        plt.figure()
+        ax = plt.subplot(111)
+        sub_domain_strain = sub_domain_strain_all[kk]
+        for cc in range(0, num_sd_col):
+            for rr in range(0, num_sd_row):
+                lab = get_text_str(rr, cc)
+                idx = rr * num_sd_col + cc
+                lab = get_text_str(rr, cc)
+                ax.plot(sub_domain_strain[idx, :], label=lab, color=col_map(idx / (num_sd_col * num_sd_row)))
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title("beat %i" % (kk))
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.25, box.width, box.height * 0.75])
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=num_sd_col)
+        img_path = pngs_folder_path.joinpath(fname + "_beat%i.png" % (kk)).resolve()
+        plt.savefig(str(img_path))
+        plt.close()
+        path_list.append(img_path)
+    return path_list
+
+
 def pngs_sub_domain_strain(
     folder_path: Path,
     tiff_list: List,
@@ -464,6 +544,8 @@ def visualize_sub_domain_strain(
     sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all, sub_domain_row_all, sub_domain_col_all, info, strain_info = load_sub_domain_strain(folder_path)
     # rotate the background tiff to match the strain results
     # strain_sub_domain_info = np.asarray([[num_tile_row, num_tile_col], [tile_dim_pix, tile_dim_pix], [center_row, center_col], [vec[0], vec[1]]])
+    num_sd_row = int(strain_info[0, 0])
+    num_sd_col = int(strain_info[0, 1])
     center_row = strain_info[2, 0]
     center_col = strain_info[2, 1]
     vec = strain_info[3, :]
@@ -476,4 +558,8 @@ def visualize_sub_domain_strain(
     png_path_list = pngs_sub_domain_strain(folder_path, tiff_list, sub_domain_row_all, sub_domain_col_all, sub_domain_Ecc_all, sub_domain_side, info, col_min, col_max, col_map, fname)
     # create gif
     gif_path = create_gif(folder_path, png_path_list)
-    return png_path_list, gif_path
+    # create subdomain locations legend
+    loc_legend_path = png_sub_domains_numbered(folder_path, tiff_list[0], sub_domain_row_all[0], sub_domain_col_all[0], sub_domain_side, num_sd_row, num_sd_col)
+    # create subdomain strain timeseries plots
+    timeseries_path_list = png_sub_domain_strain_timeseries_all(folder_path, sub_domain_Ecc_all, num_sd_row, num_sd_col)
+    return png_path_list, gif_path, loc_legend_path, timeseries_path_list

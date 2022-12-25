@@ -416,6 +416,49 @@ def test_run_sub_domain_strain_analysis():
         assert sap.is_file()
 
 
+def test_get_text_str():
+    known_str = "A1"
+    found_str = sa.get_text_str(0, 0)
+    assert known_str == found_str
+    known_str = "E7"
+    found_str = sa.get_text_str(4, 6)
+    assert known_str == found_str
+
+
+def test_png_sub_domains_numbered():
+    folder_path = example_path("real_example_short")
+    movie_folder = movie_path("real_example_short")
+    name_list_path = ia.image_folder_to_path_list(movie_folder)
+    tiff_list = ia.read_all_tiff(name_list_path)
+    example_tiff = tiff_list[0]
+    _ = ia.run_tracking(folder_path)
+    _ = sa.run_sub_domain_strain_analysis(folder_path)
+    _, _, _, _, sub_domain_row_all, sub_domain_col_all, _, strain_info = sa.load_sub_domain_strain(folder_path)
+    # update to using loaded info!
+    sub_domain_row = sub_domain_row_all[0]
+    sun_domain_col = sub_domain_col_all[0]
+    sub_domain_side = strain_info[1, 0]
+    num_sd_row = int(strain_info[0, 0])
+    num_sd_col = int(strain_info[0, 1])
+    img_path = sa.png_sub_domains_numbered(folder_path, example_tiff, sub_domain_row, sun_domain_col, sub_domain_side, num_sd_row, num_sd_col)
+    assert img_path.is_file()
+
+
+def test_png_sub_domain_strain_timeseries_all():
+    folder_path = example_path("real_example_short")
+    _ = ia.run_tracking(folder_path)
+    _ = sa.run_sub_domain_strain_analysis(folder_path)
+    sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all, sub_domain_row_all, sub_domain_col_all, info, strain_info = sa.load_sub_domain_strain(folder_path)
+    sub_domain_Ecc_all = sa.F_to_Ecc_all(sub_domain_F_rr_all, sub_domain_F_rc_all, sub_domain_F_cr_all, sub_domain_F_cc_all)
+    mask_path = tissue_mask_path("real_example_short")
+    mask = ia.read_txt_as_mask(mask_path)
+    tile_style = 1
+    _, _, num_sd_row, num_sd_col = sa.create_sub_domains(mask, pillar_clip_fraction=0.5, shrink_row=0.1, shrink_col=0.1, tile_dim_pix=40, num_tile_row=5, num_tile_col=3, tile_style=tile_style)
+    img_path = sa.png_sub_domain_strain_timeseries_all(folder_path, sub_domain_Ecc_all, num_sd_row, num_sd_col)
+    for ig in img_path:
+        assert ig.is_file()
+
+
 def test_pngs_sub_domain_strain_and_gif():
     folder_path = example_path("real_example_short")
     _ = ia.run_tracking(folder_path)
@@ -435,7 +478,10 @@ def test_pngs_sub_domain_strain_and_gif():
 
 def test_visualize_sub_domain_strain():
     folder_path = example_path("real_example_short")
-    png_path_list, gif_path = sa.visualize_sub_domain_strain(folder_path)
+    png_path_list, gif_path, loc_legend_path, timeseries_path_list = sa.visualize_sub_domain_strain(folder_path)
     for sap in png_path_list:
         assert sap.is_file()
     assert gif_path.is_file()
+    assert loc_legend_path.is_file()
+    for tpl in timeseries_path_list:
+        assert tpl.is_file()
