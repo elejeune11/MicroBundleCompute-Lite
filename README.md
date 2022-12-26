@@ -251,7 +251,7 @@ For ``tile_style = 1``, the algorithm will fit the maximum number of tiles with 
 <img alt="sub-domain strains movie" src="tutorials/figs/sub_domain_strain_long.gif" width="79%" />
 </p>
 
-At present, strain visualizations show the column-column entry of the Green-Lagrange strain tensor ($E_{cc}$ where $c$ is the global horizontal coordinate axis defined by the image column). The deformation gradient of each sub-domain is saved so visualizing alternative strain quantities is straightforward.
+At present, strain visualizations show the column-column entry of the Green-Lagrange strain tensor ($$E_{cc}$$ where $$c$$ is the global horizontal coordinate axis defined by the image column). The deformation gradient of each sub-domain is saved so visualizing alternative strain quantities is straightforward.
 
 ### Running the code
 
@@ -339,7 +339,7 @@ For the displacement tracking results, we plot absolute displacement of the iden
 <img alt="strain visualization" src="tutorials/figs/sub_domain_strain_long.gif" width="75%" />
 </p>
 
-For the strain tracking results, we plot $E_cc$ for each sub-domain. Specifically, we visualize $E_cc$ organized in space in ``sub_domain_strain.gif`` and ``%04d_strain.png``, and we visualize $E_cc$ in time (i.e., vs. frame number) in ``strain_timeseries_Ecc_beat%i.png``. The legend in the timeseries plots corresponds to the sub-domain labels in ``strain_sub_domain_key.png``.
+For the strain tracking results, we plot $$E_cc$$ for each sub-domain. Specifically, we visualize $$E_cc$$ organized in space in ``sub_domain_strain.gif`` and ``%04d_strain.png``, and we visualize $$E_cc$$ in time (i.e., vs. frame number) in ``strain_timeseries_Ecc_beat%i.png``. The legend in the timeseries plots corresponds to the sub-domain labels in ``strain_sub_domain_key.png``.
 
 In all cases, the output visualizations are stored as ``.pngs`` and as a ``.gif`` -- ``.mp4`` functionality was removed due to issues with ffmpeg on some machines.
 
