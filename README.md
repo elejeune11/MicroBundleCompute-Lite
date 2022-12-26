@@ -251,7 +251,7 @@ For ``tile_style = 1``, the algorithm will fit the maximum number of tiles with 
 <img alt="sub-domain strains movie" src="tutorials/figs/sub_domain_strain_long.gif" width="79%" />
 </p>
 
-At present, strain visualizations show the column-column entry of the Green-Lagrange strain tensor ($E_{cc}$ where $c$ is the global horizontal coordinate axis defined by the image column). The deformation gradient of each sub-domain is saved so visualizing alternative strain quantities is straightforward.
+At present, strain visualizations show the column-column entry of the Green-Lagrange strain tensor ( $E_{cc}$ where $c$ is the global horizontal coordinate axis defined by the image column). The deformation gradient of each sub-domain is saved so visualizing alternative strain quantities is straightforward.
 
 ### Running the code
 
